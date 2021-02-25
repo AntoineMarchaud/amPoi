@@ -118,6 +118,10 @@ class DetailsViewModel @Inject constructor(
     }
 
     private fun category(venueDetail: VenueDetail): String {
+
+        if(venueDetail.categories.isNullOrEmpty())
+            return ""
+
         return venueDetail.categories?.get(0)?.shortName ?: ""
     }
 

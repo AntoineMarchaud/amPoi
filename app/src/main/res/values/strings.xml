@@ -32,6 +32,9 @@
     <string name="error_location_data">Location data was invalid can not navigate to details</string>
     <string name="request_failed_main">Unable to retrieve locations</string>
     <string name="request_failed_details">Unable to retrieve location details</string>
+
+    <string name="error_no_data">Please enable wifi or data</string>
+    <string name="error_no_gps">Please enable your GPS</string>
     <string name="error_location_permission_denied">Location permission denied, enable?</string>
     <string name="error_closing_no_location_permission">This application requires the use of location services.  Without this permission the application will not function properly and will close.</string>
 

@@ -2,8 +2,11 @@ package com.amarchaud.ampoi.view
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import android.location.Location
+import android.location.LocationManager
 import android.net.Uri
 import android.os.Bundle
 import android.os.Looper
@@ -12,24 +15,18 @@ import android.util.Log
 import android.view.*
 import android.view.animation.AccelerateDecelerateInterpolator
 import androidx.activity.OnBackPressedCallback
-import androidx.annotation.UiThread
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
-import androidx.core.content.ContextCompat
 import androidx.core.view.marginBottom
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.setupWithNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import com.amarchaud.ampoi.R
-import com.amarchaud.ampoi.interfaces.ILocationClickListener
 import com.amarchaud.ampoi.adapter.SearchResultsAdapter
 import com.amarchaud.ampoi.databinding.FragmentMainBinding
+import com.amarchaud.ampoi.interfaces.ILocationClickListener
 import com.amarchaud.ampoi.model.app.VenueModel
 import com.amarchaud.ampoi.model.database.AppDao
 import com.amarchaud.ampoi.utils.Errors
@@ -48,7 +45,6 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.util.concurrent.Executors
 import javax.inject.Inject
 
 
@@ -223,19 +219,49 @@ class MainFragment : Fragment(), ILocationClickListener {
                             dismissSnackBar()
                             viewModel.refresh(currentLocation)
                         }
-                        MainViewModel.ERROR_CODE_NO_CURRENT_LOCATION -> snackBar = Errors.showError(
-                            mainCoordinator,
-                            R.string.error_location_permission_denied,
-                            R.string.enable
-                        ) {
-                            //launch app detail settings page to let the user enable the permission that they denied
-                            val intent = Intent()
-                            intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-                            intent.data =
-                                Uri.fromParts("package", requireActivity().packageName, null)
-                            startActivity(intent)
-                            requireActivity().finish()
+                        MainViewModel.ERROR_CODE_NO_CURRENT_LOCATION -> {
+
+
+                            val lm =
+                                requireContext().getSystemService(Context.LOCATION_SERVICE) as LocationManager
+                            val gps_enabled = try {
+                                lm.isProviderEnabled(LocationManager.GPS_PROVIDER)
+                            } catch (ex: Exception) {
+                                false
+                            }
+
+                            if (!gps_enabled) {
+                                snackBar = Errors.showError(
+                                    mainCoordinator,
+                                    R.string.error_no_gps,
+                                    R.string.close
+                                ) {
+                                    dismissSnackBar()
+                                }
+                            } else {
+                                snackBar = Errors.showError(
+                                    mainCoordinator,
+                                    R.string.error_location_permission_denied,
+                                    R.string.enable
+                                ) {
+
+                                    //launch app detail settings page to let the user enable the permission that they denied
+                                    val intent = Intent()
+                                    intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                                    intent.data =
+                                        Uri.fromParts(
+                                            "package",
+                                            requireActivity().packageName,
+                                            null
+                                        )
+                                    startActivity(intent)
+                                    requireActivity().finish()
+                                }
+                            }
+
                         }
+
+
                     }
                 }
             })
@@ -276,6 +302,7 @@ class MainFragment : Fragment(), ILocationClickListener {
                 }
 
                 override fun onPermissionDenied(p0: PermissionDeniedResponse?) {
+
                     dismissSnackBar()
                     AlertDialog.Builder(requireContext())
                         .setMessage(R.string.error_closing_no_location_permission)

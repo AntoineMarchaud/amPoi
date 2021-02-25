@@ -2,6 +2,7 @@
 <layout xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data>
+
         <variable
             name="model"
             type="com.amarchaud.ampoi.viewmodel.DetailsViewModel" />
@@ -21,14 +22,39 @@
             android:layout_height="match_parent"
             tools:context=".details.ui.DetailsActivity">
 
+            <!-- top screen -->
+            <com.google.android.material.appbar.AppBarLayout
+                android:id="@+id/details_app_bar_layout"
+                android:layout_width="match_parent"
+                android:layout_height="400dp">
+
+                <com.google.android.material.appbar.CollapsingToolbarLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    app:contentScrim="?attr/colorPrimary"
+                    app:expandedTitleGravity="top"
+                    app:layout_scrollFlags="scroll|enterAlwaysCollapsed|exitUntilCollapsed|snap"
+                    app:statusBarScrim="?attr/colorPrimary"
+                    app:titleEnabled="false">
+
+                    <org.osmdroid.views.MapView
+                        android:id="@+id/mapView"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        app:layout_collapseMode="parallax"
+                        app:layout_collapseParallaxMultiplier="0.5" />
+
+                </com.google.android.material.appbar.CollapsingToolbarLayout>
+
+            </com.google.android.material.appbar.AppBarLayout>
+
             <!-- Details ! -->
             <androidx.core.widget.NestedScrollView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-                <androidx.constraintlayout.widget.ConstraintLayout
-                    xmlns:android="http://schemas.android.com/apk/res/android"
+                <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
                     xmlns:tools="http://schemas.android.com/tools"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
@@ -48,10 +74,10 @@
                         android:layout_marginStart="8dp"
                         android:layout_marginTop="8dp"
                         android:layout_marginEnd="8dp"
+                        android:text="@{model.venueName}"
                         android:textColor="@color/textPrimary"
                         android:textSize="18sp"
                         android:textStyle="bold"
-                        android:text="@{model.venueName}"
                         app:layout_constraintEnd_toStartOf="@+id/guideline"
                         app:layout_constraintHorizontal_bias="0.0"
                         app:layout_constraintHorizontal_chainStyle="packed"
@@ -64,9 +90,9 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
+                        android:text="@{model.venueRating}"
                         android:textColor="@color/textPrimary"
                         android:textSize="12sp"
-                        android:text="@{model.venueRating}"
                         app:layout_constraintStart_toStartOf="@+id/details_name"
                         app:layout_constraintTop_toBottomOf="@+id/details_name"
                         tools:text="4.6" />
@@ -79,20 +105,20 @@
                         android:layout_marginStart="8dp"
                         android:isIndicator="true"
                         android:numStars="5"
-                        android:stepSize="0.1"
                         android:rating="@{safeUnbox(model.venueBar)}"
+                        android:stepSize="0.1"
                         app:layout_constraintBottom_toBottomOf="@+id/details_rating"
                         app:layout_constraintStart_toEndOf="@+id/details_rating"
-                        app:layout_constraintTop_toTopOf="@+id/details_rating"/>
+                        app:layout_constraintTop_toTopOf="@+id/details_rating" />
 
                     <TextView
                         android:id="@+id/details_reviews"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
+                        android:text="@{String.valueOf(safeUnbox(model.venueReviews))}"
                         android:textColor="@color/textPrimary"
                         android:textSize="12sp"
-                        android:text="@{String.valueOf(safeUnbox(model.venueReviews))}"
                         app:layout_constraintBottom_toBottomOf="@+id/details_rating"
                         app:layout_constraintStart_toEndOf="@id/details_rating_bar"
                         app:layout_constraintTop_toTopOf="@+id/details_rating"
@@ -116,8 +142,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:textSize="12sp"
                         android:text="@{model.venueCategory}"
+                        android:textSize="12sp"
                         app:layout_constraintStart_toStartOf="@+id/details_rating"
                         app:layout_constraintTop_toBottomOf="@+id/details_rating"
                         tools:text="Mexican Restaurant" />
@@ -128,8 +154,8 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
                         android:layout_marginTop="24dp"
-                        android:textColor="@color/textSecondary"
                         android:text="@{model.venueAddress}"
+                        android:textColor="@color/textSecondary"
                         app:layout_constraintHorizontal_chainStyle="packed"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/details_category"
@@ -156,18 +182,18 @@
                         android:ellipsize="end"
                         android:gravity="center_vertical"
                         android:lines="1"
+                        android:onClick="@{() -> model.onWebsiteClick(context, model.venueWebsite)}"
                         android:paddingStart="8dp"
                         android:paddingEnd="8dp"
-                        android:visibility="@{model.websiteVisibility(model.venueWebsite)}"
                         android:text="@{model.venueWebsite}"
-                        android:onClick="@{() -> model.onWebsiteClick(context, model.venueWebsite)}"
+                        android:visibility="@{model.websiteVisibility(model.venueWebsite)}"
+                        app:drawableStartCompat="@drawable/web"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/details_address"
                         tools:text="https:\/\/foursquare.com\/v\/columbia-tower-club\/451c049bf964a520803a1fe3"
-                        tools:visibility="visible"
-                        app:drawableStartCompat="@drawable/web" />
+                        tools:visibility="visible" />
 
                     <TextView
                         android:id="@+id/details_phone"
@@ -178,14 +204,14 @@
                         android:gravity="center_vertical"
                         android:paddingStart="8dp"
                         android:paddingEnd="8dp"
-                        android:visibility="@{model.phoneVisibility(model.venuePhone)}"
                         android:text="@{model.venuePhone}"
+                        android:visibility="@{model.phoneVisibility(model.venuePhone)}"
+                        app:drawableStartCompat="@drawable/phone"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/details_web"
                         tools:text="(206) 529-8810"
-                        tools:visibility="visible"
-                        app:drawableStartCompat="@drawable/phone" />
+                        tools:visibility="visible" />
 
                     <androidx.constraintlayout.widget.Guideline
                         android:id="@+id/guideline"
@@ -197,32 +223,6 @@
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
             </androidx.core.widget.NestedScrollView>
-
-            <!-- -->
-            <com.google.android.material.appbar.AppBarLayout
-                android:id="@+id/details_app_bar_layout"
-                android:layout_width="match_parent"
-                android:layout_height="400dp">
-
-                <com.google.android.material.appbar.CollapsingToolbarLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    app:contentScrim="?attr/colorPrimary"
-                    app:expandedTitleGravity="top"
-                    app:layout_scrollFlags="scroll|enterAlwaysCollapsed|exitUntilCollapsed|snap"
-                    app:statusBarScrim="?attr/colorPrimary"
-                    app:titleEnabled="false">
-
-                    <org.osmdroid.views.MapView
-                        android:id="@+id/mapView"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        app:layout_collapseMode="parallax"
-                        app:layout_collapseParallaxMultiplier="0.5"/>
-
-                </com.google.android.material.appbar.CollapsingToolbarLayout>
-
-            </com.google.android.material.appbar.AppBarLayout>
 
         </androidx.coordinatorlayout.widget.CoordinatorLayout>
 

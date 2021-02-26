@@ -293,7 +293,7 @@ class DetailsFragment : Fragment() {
                 ) {
                     p1?.continuePermissionRequest()
                 }
-            })
+            }).check()
 
     }
 

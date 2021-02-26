@@ -9,8 +9,8 @@ interface FoursquareApi {
     companion object {
         private const val CLIENT_ID = "ATSUR2UPOY5ZSCYRG4UI3KZQ2G5JG0BCDXDATOC22QND3GQL"
         private const val CLIENT_SECRET = "ULGITGGDBYQJSEQYKYX1X1KUGZLZT1BRCQ2C0POK2MN3HPG0"
-        private const val VERSION = "20180401"
-        private const val COMMON_PARAMS = "&client_id=$CLIENT_ID&client_secret=$CLIENT_SECRET&v=$VERSION"
+        private const val VERSION = "20201231" // YYYYMMDD
+        private const val COMMON_PARAMS = "&client_id=$CLIENT_ID&client_secret=$CLIENT_SECRET&v=$VERSION&locale=fr" 
         //47.606200,-122.332100     ll=47.606200,-122.332100&
     }
 

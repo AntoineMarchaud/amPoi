@@ -277,6 +277,13 @@ class MainFragment : Fragment(), ILocationClickListener {
                                     dismissSnackBar()
                                 }
                             }
+
+                            override fun onLocationAvailability( locationAvailability : LocationAvailability) {
+                                if(!locationAvailability.isLocationAvailable) {
+                                    currentLocation = null
+                                    // do not refresh view, let current items displayed
+                                }
+                            }
                         },
                         Looper.getMainLooper()
                     )

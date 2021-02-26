@@ -35,6 +35,7 @@
 
     <string name="error_no_data">Please enable wifi or data</string>
     <string name="error_no_gps">Please enable your GPS</string>
+    <string name="error_no_current_location">No current location</string>
     <string name="error_location_permission_denied">Location permission denied, enable?</string>
     <string name="error_closing_no_location_permission">This application requires the use of location services.  Without this permission the application will not function properly and will close.</string>
 

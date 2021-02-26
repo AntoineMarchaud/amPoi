@@ -2,20 +2,14 @@ package com.amarchaud.ampoi.view
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.Context
-import android.content.DialogInterface
 import android.content.Intent
-import android.location.Location
-import android.location.LocationManager
 import android.net.Uri
 import android.os.Bundle
-import android.os.Looper
 import android.provider.Settings
 import android.util.Log
 import android.view.*
 import android.view.animation.AccelerateDecelerateInterpolator
 import androidx.activity.OnBackPressedCallback
-import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.marginBottom
@@ -54,7 +48,6 @@ class MainFragment : Fragment(), ILocationClickListener {
     companion object {
         const val TAG = "MainFragment"
         const val STATE_QUERY_STRING = "queryString"
-        private const val PERMISSION_LOCATION_REQUEST_CODE = 579
         const val DEBOUNCE_DELAY = 500L // in milli
         const val UPDATE_TIME = 3000L // in milli
     }
@@ -64,27 +57,14 @@ class MainFragment : Fragment(), ILocationClickListener {
 
     private val viewModel: MainViewModel by viewModels()
 
-    private var mLocationRequest: LocationRequest = LocationRequest.create()
-
-    @VisibleForTesting
-    private val locationProviderClient: FusedLocationProviderClient by lazy {
-        LocationServices.getFusedLocationProviderClient(requireActivity())
-    }
 
     @Inject
     lateinit var myDao: AppDao
 
     private var snackBar: Snackbar? = null
     private var searchView: SearchView? = null // will be setted in onPrepareOptionsMenu
-    private var currentLocation: Location? = null // saved location from locationProviderClient
 
     private val searchResultAdapter: SearchResultsAdapter by lazy { SearchResultsAdapter(this) }
-
-    init {
-        mLocationRequest.interval = UPDATE_TIME
-        mLocationRequest.fastestInterval = UPDATE_TIME
-        mLocationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -114,13 +94,13 @@ class MainFragment : Fragment(), ILocationClickListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        handleGetLocation()
+        permissionGetLocation()
 
         // get last query
         savedInstanceState?.let {
             val query = it.getString(STATE_QUERY_STRING)
             query?.let { queryString ->
-                viewModel.setQuery(queryString, currentLocation)
+                viewModel.setQuery(queryString)
             }
         }
 
@@ -130,7 +110,7 @@ class MainFragment : Fragment(), ILocationClickListener {
 
             mainToggleFullMap.setOnClickListener {
                 viewModel.venueModelsLiveData.value?.let { locations: ArrayList<VenueModel> ->
-                    currentLocation?.let { latLng ->
+                    viewModel.currentLocation?.let { latLng ->
                         findNavController().navigate(
                             MainFragmentDirections.actionMainFragmentToMapFragment(
                                 LatLng(latLng.latitude, latLng.longitude),
@@ -157,12 +137,7 @@ class MainFragment : Fragment(), ILocationClickListener {
                 }
 
                 dismissSnackBar()
-
-                if (currentLocation == null) {
-                    handleGetLocation()
-                } else {
-                    viewModel.refresh(currentLocation)
-                }
+                viewModel.refresh()
             }
 
             /**
@@ -203,52 +178,53 @@ class MainFragment : Fragment(), ILocationClickListener {
                         ) {
                             // when click on snackbar
                             dismissSnackBar()
-                            viewModel.refresh(currentLocation)
+                            viewModel.refresh()
+                        }
+                        MainViewModel.ERROR_CODE_NOGPS -> {
+                            mainSwipeRefresh.isRefreshing = false
+
+                            snackBar = Errors.showError(
+                                mainCoordinator,
+                                R.string.error_no_gps,
+                                R.string.close
+                            ) {
+                                dismissSnackBar()
+                            }
                         }
                         MainViewModel.ERROR_CODE_NO_CURRENT_LOCATION -> {
 
                             mainSwipeRefresh.isRefreshing = false
 
-                            val lm =
-                                requireContext().getSystemService(Context.LOCATION_SERVICE) as LocationManager
-                            val gps_enabled = try {
-                                lm.isProviderEnabled(LocationManager.GPS_PROVIDER)
-                            } catch (ex: Exception) {
-                                false
+                            snackBar = Errors.showError(
+                                mainCoordinator,
+                                R.string.error_no_current_location,
+                                R.string.enable
+                            ) {
+                                dismissSnackBar()
                             }
-
-                            if (!gps_enabled) {
-                                snackBar = Errors.showError(
-                                    mainCoordinator,
-                                    R.string.error_no_gps,
-                                    R.string.close
-                                ) {
-                                    dismissSnackBar()
-                                }
-                            } else {
-                                snackBar = Errors.showError(
-                                    mainCoordinator,
-                                    R.string.error_location_permission_denied,
-                                    R.string.enable
-                                ) {
-
-                                    //launch app detail settings page to let the user enable the permission that they denied
-                                    val intent = Intent()
-                                    intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-                                    intent.data =
-                                        Uri.fromParts(
-                                            "package",
-                                            requireActivity().packageName,
-                                            null
-                                        )
-                                    startActivity(intent)
-                                    requireActivity().finish()
-                                }
-                            }
-
                         }
+                        MainViewModel.ERROR_PERMISSION -> {
+                            mainSwipeRefresh.isRefreshing = false
 
+                            snackBar = Errors.showError(
+                                mainCoordinator,
+                                R.string.error_location_permission_denied,
+                                R.string.enable
+                            ) {
 
+                                //launch app detail settings page to let the user enable the permission that they denied
+                                val intent = Intent()
+                                intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                                intent.data =
+                                    Uri.fromParts(
+                                        "package",
+                                        requireActivity().packageName,
+                                        null
+                                    )
+                                startActivity(intent)
+                                requireActivity().finish()
+                            }
+                        }
                     }
                 }
             })
@@ -256,7 +232,7 @@ class MainFragment : Fragment(), ILocationClickListener {
     }
 
 
-    private fun handleGetLocation() {
+    private fun permissionGetLocation() {
 
         Log.d(TAG, "handleGetLocation")
 
@@ -267,32 +243,7 @@ class MainFragment : Fragment(), ILocationClickListener {
 
                 @SuppressLint("MissingPermission")
                 override fun onPermissionGranted(p0: PermissionGrantedResponse?) {
-
-                    locationProviderClient.requestLocationUpdates(
-                        mLocationRequest,
-                        object : LocationCallback() {
-                            override fun onLocationResult(locationResult: LocationResult) {
-                                for (location in locationResult.locations) {
-                                    currentLocation = location
-                                    dismissSnackBar()
-                                }
-                            }
-
-                            override fun onLocationAvailability( locationAvailability : LocationAvailability) {
-                                if(!locationAvailability.isLocationAvailable) {
-                                    currentLocation = null
-                                    // do not refresh view, let current items displayed
-                                }
-                            }
-                        },
-                        Looper.getMainLooper()
-                    )
-
-                    locationProviderClient.lastLocation.addOnSuccessListener {
-                        currentLocation = it
-                        dismissSnackBar()
-                        viewModel.refresh(currentLocation)
-                    }
+                    viewModel.startLocation()
                 }
 
                 override fun onPermissionDenied(p0: PermissionDeniedResponse?) {
@@ -320,8 +271,6 @@ class MainFragment : Fragment(), ILocationClickListener {
                 }
 
             }).check()
-
-
     }
 
     // *** Menu management
@@ -396,16 +345,16 @@ class MainFragment : Fragment(), ILocationClickListener {
 
         requireActivity().runOnUiThread {
             if (query.isBlank()) {
-                viewModel.setQuery("", currentLocation)
+                viewModel.setQuery("")
             } else {
                 binding.mainSwipeRefresh.isRefreshing = true
                 dismissSnackBar()
-                viewModel.setQuery(query, currentLocation)
+                viewModel.setQuery(query)
             }
 
-            if (currentLocation == null) {
+            if (viewModel.currentLocation == null) {
                 dismissSnackBar()
-                handleGetLocation()
+                permissionGetLocation()
             }
         }
     }
@@ -469,7 +418,7 @@ class MainFragment : Fragment(), ILocationClickListener {
      */
     override fun onLocationClicked(id: String) {
 
-        currentLocation?.let { currentLocation ->
+        viewModel.currentLocation?.let { currentLocation ->
             findNavController().navigate(
                 MainFragmentDirections.actionMainFragmentToDetailsFragment(
                     id,

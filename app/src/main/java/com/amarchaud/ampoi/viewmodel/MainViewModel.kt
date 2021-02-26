@@ -54,24 +54,6 @@ class MainViewModel @Inject constructor(
         getLocationResults(searchFilter, currentLocation)
     }
 
-    /*
-    // todo DAO
-    fun checkLocationResultsFavorites(context: Context, locations: ArrayList<LocationResult>, statusChangedListener: LocationFavoriteChanged) {
-        Executors.newSingleThreadExecutor().submit {
-            locations.forEach { location ->
-                location.id?.let {id ->
-                    FavoritesDatabase.database(context).favoritesDao().getFavoriteById(id).let {
-                        if ((it == null && location.isFavorite) || (it != null && !location.isFavorite)) {
-                            location.isFavorite = !location.isFavorite
-                            statusChangedListener.onFavoriteChangedStatus()
-                        }
-                    }
-                }
-            }
-        }
-    }*/
-
-
     /**
      * Private methods of the viewmodel
      */

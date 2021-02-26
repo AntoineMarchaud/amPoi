@@ -182,20 +182,6 @@ class MainFragment : Fragment(), ILocationClickListener {
                     toggleEmptyState(false)
 
                     searchResultAdapter.setLocationResults(it)
-
-                    // todo DAO ?
-                    /*
-                    viewModel.checkLocationResultsFavorites(
-                        this,
-                        it,
-                        object : MainScreenViewModel.LocationFavoriteChanged {
-                            override fun onFavoriteChangedStatus() {
-                                runOnUiThread {
-                                    adapter.setLocationResults(it)
-                                }
-                            }
-                        })
-                     */
                 }
 
                 setFullMapVisibleState(it)
@@ -221,6 +207,7 @@ class MainFragment : Fragment(), ILocationClickListener {
                         }
                         MainViewModel.ERROR_CODE_NO_CURRENT_LOCATION -> {
 
+                            mainSwipeRefresh.isRefreshing = false
 
                             val lm =
                                 requireContext().getSystemService(Context.LOCATION_SERVICE) as LocationManager

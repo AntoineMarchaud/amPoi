@@ -94,5 +94,5 @@ dependencies {
     implementation 'com.karumi:dexter:6.2.2'
 
     // Map opensource
-    implementation 'org.osmdroid:osmdroid-android:6.1.8'
+    implementation 'org.osmdroid:osmdroid-android:6.1.10'
 }

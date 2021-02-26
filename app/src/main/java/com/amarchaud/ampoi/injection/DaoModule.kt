@@ -22,7 +22,7 @@ class DaoModule {
         return Room.databaseBuilder(
             appContext,
             AppDb::class.java,
-            "eStats_db"
+            "amPoi_db"
         ).build()
     }
 

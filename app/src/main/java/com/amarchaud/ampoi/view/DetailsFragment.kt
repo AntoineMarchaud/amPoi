@@ -144,27 +144,27 @@ class DetailsFragment : Fragment() {
 
             //colorize the favorites based on if this location has been favorited by the user
             detailsIsFavorite.visibility = View.INVISIBLE
-            Executors.newSingleThreadExecutor().submit {
-                venueDetail.id?.let { locationId ->
-                    context?.let { context ->
 
-                        lifecycleScope.launch {
-                            val favorite = myDao.getFavoriteById(locationId)
+            venueDetail.id?.let { locationId ->
+                context?.let { context ->
 
-                            val isFavorite = favorite != null && favorite.id == locationId
+                    lifecycleScope.launch {
+                        val favorite = myDao.getFavoriteById(locationId)
 
-                            requireActivity().runOnUiThread {
-                                detailsIsFavorite.setImageDrawable(
-                                    ContextCompat.getDrawable(
-                                        context,
-                                        if (isFavorite) R.drawable.star_circle else R.drawable.star_circle_disabled
-                                    )
+                        val isFavorite = favorite != null && favorite.id == locationId
+
+                        requireActivity().runOnUiThread {
+                            detailsIsFavorite.setImageDrawable(
+                                ContextCompat.getDrawable(
+                                    context,
+                                    if (isFavorite) R.drawable.star_circle else R.drawable.star_circle_disabled
                                 )
-                                detailsIsFavorite.visibility = View.VISIBLE
-                            }
+                            )
+                            detailsIsFavorite.visibility = View.VISIBLE
                         }
                     }
                 }
+
             }
         }
 
@@ -180,49 +180,48 @@ class DetailsFragment : Fragment() {
     private fun setupFavoriteAction(venueDetail: VenueDetail) {
         with(binding) {
             detailsIsFavorite.setOnClickListener {
-                Executors.newSingleThreadExecutor().submit {
-                    venueDetail.id?.let { locationId ->
-                        context?.let { context ->
 
-                            lifecycleScope.launch {
-                                val favorite = myDao.getFavoriteById(locationId)
+                venueDetail.id?.let { locationId ->
+                    context?.let { context ->
 
-                                val isFavorite = favorite != null && favorite.id == locationId
-                                if (isFavorite) {
-                                    myDao.removeFavoriteById(locationId)
-                                    activity?.runOnUiThread {
-                                        view?.let {
-                                            Snackbar.make(
-                                                it,
-                                                getString(R.string.removed_favorite),
-                                                Snackbar.LENGTH_SHORT
-                                            ).show()
-                                        }
-                                    }
-                                } else {
-                                    myDao.addFavorite(Favorite(locationId))
-                                    activity?.runOnUiThread {
-                                        view?.let {
-                                            Snackbar.make(
-                                                it,
-                                                getString(R.string.added_favorite),
-                                                Snackbar.LENGTH_SHORT
-                                            ).show()
-                                        }
+                        lifecycleScope.launch {
+                            val favorite = myDao.getFavoriteById(locationId)
+
+                            val isFavorite = favorite != null && favorite.id == locationId
+                            if (isFavorite) {
+                                myDao.removeFavoriteById(locationId)
+                                activity?.runOnUiThread {
+                                    view?.let {
+                                        Snackbar.make(
+                                            it,
+                                            getString(R.string.removed_favorite),
+                                            Snackbar.LENGTH_SHORT
+                                        ).show()
                                     }
                                 }
-
-                                detailsIsFavorite.setImageDrawable(
-                                    ContextCompat.getDrawable(
-                                        context,
-                                        if (!isFavorite) R.drawable.star_circle else R.drawable.star_circle_disabled
-                                    )
-                                )
-
+                            } else {
+                                myDao.addFavorite(Favorite(locationId))
+                                activity?.runOnUiThread {
+                                    view?.let {
+                                        Snackbar.make(
+                                            it,
+                                            getString(R.string.added_favorite),
+                                            Snackbar.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                }
                             }
 
+                            detailsIsFavorite.setImageDrawable(
+                                ContextCompat.getDrawable(
+                                    context,
+                                    if (!isFavorite) R.drawable.star_circle else R.drawable.star_circle_disabled
+                                )
+                            )
 
                         }
+
+
                     }
                 }
             }

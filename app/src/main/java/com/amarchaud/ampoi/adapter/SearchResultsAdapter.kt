@@ -63,13 +63,23 @@ class SearchResultsAdapter(private val onClickListener: ILocationClickListener) 
                             meters.toString()
                         )
                 }
-
-                //load the image async with Glide so that the UI doesnt have to wait around on images to load (GlideConfig.kt)
-                Glide.with(context).load(venueModel.locationIcon).into(locationImage)
-
-                //set the initial state of the favorites icon by checking if its a favorite in the database
-                setupFavoriteIndicator(holder.binding, venueModel, onClickListener)
             }
+
+            if (venueModel.locationIcon.isEmpty()) {
+                locationImage.setImageResource(R.drawable.unknown)
+            } else {
+                try {
+                    Glide.with(context)
+                        .load(venueModel.locationIcon)
+                        .error(R.drawable.unknown)
+                        .into(locationImage)
+                } catch (e: IllegalArgumentException) {
+                    locationImage.setImageResource(R.drawable.unknown)
+                }
+            }
+
+            //set the initial state of the favorites icon by checking if its a favorite in the database
+            setupFavoriteIndicator(holder.binding, venueModel, onClickListener)
 
             // callback to the entire view
             holder.itemView.setOnClickListener {

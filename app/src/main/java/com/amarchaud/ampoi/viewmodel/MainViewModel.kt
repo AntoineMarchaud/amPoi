@@ -1,22 +1,15 @@
 package com.amarchaud.ampoi.viewmodel
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.app.Application
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
-import android.net.Uri
 import android.os.Looper
-import android.provider.Settings
 import android.util.Log
-import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
-import com.amarchaud.ampoi.R
 import com.amarchaud.ampoi.model.app.VenueModel
 import com.amarchaud.ampoi.model.database.AppDao
 import com.amarchaud.ampoi.model.entity.Favorite
@@ -25,16 +18,8 @@ import com.amarchaud.ampoi.model.network.search.Venue
 import com.amarchaud.ampoi.network.FoursquareApi
 import com.amarchaud.ampoi.view.MainFragment
 import com.google.android.gms.location.*
-import com.karumi.dexter.Dexter
-import com.karumi.dexter.PermissionToken
-import com.karumi.dexter.listener.PermissionDeniedResponse
-import com.karumi.dexter.listener.PermissionGrantedResponse
-import com.karumi.dexter.listener.PermissionRequest
-import com.karumi.dexter.listener.single.PermissionListener
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import java.lang.Exception
-import java.util.concurrent.Executors
 import javax.inject.Inject
 
 @HiltViewModel
@@ -69,7 +54,7 @@ class MainViewModel @Inject constructor(
         mLocationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
     }
 
-    var currentLocation : Location? = null
+    var currentLocation: Location? = null
 
     /**
      * Methods called from View
@@ -166,10 +151,12 @@ class MainViewModel @Inject constructor(
                     }
                 }
 
-                override fun onLocationAvailability( locationAvailability : LocationAvailability) {
-                    if(!locationAvailability.isLocationAvailable) {
+                override fun onLocationAvailability(locationAvailability: LocationAvailability) {
+                    if (!locationAvailability.isLocationAvailable) {
                         currentLocation = null
                         locationResultsError.postValue(ERROR_CODE_NOGPS)
+                    } else {
+                        locationResultsError.postValue(null)
                     }
                 }
             },

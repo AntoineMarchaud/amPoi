@@ -58,8 +58,6 @@ class MainFragment : Fragment(), ILocationClickListener {
 
     private val viewModel: MainViewModel by viewModels()
 
-    var bottomNavView: BottomNavigationView? = null
-
     @Inject
     lateinit var myDao: AppDao
 
@@ -74,8 +72,6 @@ class MainFragment : Fragment(), ILocationClickListener {
     ): View {
 
         setHasOptionsMenu(true)
-
-        bottomNavView = requireActivity().findViewById(R.id.bottom_nav)
 
         // This callback will only be called when MyFragment is at least Started.
         val callback: OnBackPressedCallback =
@@ -177,7 +173,7 @@ class MainFragment : Fragment(), ILocationClickListener {
 
                         MainViewModel.ERROR_CODE_RETRIEVE -> {
 
-                            bottomNavView?.let {
+                            view?.let {
                                 snackBar = Errors.showError(
                                     it,
                                     R.string.request_failed_main,
@@ -191,54 +187,44 @@ class MainFragment : Fragment(), ILocationClickListener {
                         }
                         MainViewModel.ERROR_CODE_NOGPS -> {
                             mainSwipeRefresh.isRefreshing = false
-
-                            bottomNavView?.let {
-                                snackBar = Errors.showError(
-                                    it,
-                                    R.string.error_no_gps,
-                                    R.string.close
-                                ) {
-                                    dismissSnackBar()
-                                }
+                            snackBar = Errors.showError(
+                                mainCoordinator,
+                                R.string.error_no_gps,
+                                R.string.close
+                            ) {
+                                dismissSnackBar()
                             }
-
                         }
                         MainViewModel.ERROR_CODE_NO_CURRENT_LOCATION -> {
 
                             mainSwipeRefresh.isRefreshing = false
-
-                            bottomNavView?.let {
-                                snackBar = Errors.showError(
-                                    it,
-                                    R.string.error_no_current_location,
-                                    R.string.enable
-                                ) {
-                                    dismissSnackBar()
-                                }
+                            snackBar = Errors.showError(
+                                mainCoordinator,
+                                R.string.error_no_current_location,
+                                R.string.enable
+                            ) {
+                                dismissSnackBar()
                             }
                         }
                         MainViewModel.ERROR_PERMISSION -> {
                             mainSwipeRefresh.isRefreshing = false
+                            snackBar = Errors.showError(
+                                mainCoordinator,
+                                R.string.error_location_permission_denied,
+                                R.string.enable
+                            ) {
 
-                            bottomNavView?.let {
-                                snackBar = Errors.showError(
-                                    it,
-                                    R.string.error_location_permission_denied,
-                                    R.string.enable
-                                ) {
-
-                                    //launch app detail settings page to let the user enable the permission that they denied
-                                    val intent = Intent()
-                                    intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-                                    intent.data =
-                                        Uri.fromParts(
-                                            "package",
-                                            requireActivity().packageName,
-                                            null
-                                        )
-                                    startActivity(intent)
-                                    requireActivity().finish()
-                                }
+                                //launch app detail settings page to let the user enable the permission that they denied
+                                val intent = Intent()
+                                intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                                intent.data =
+                                    Uri.fromParts(
+                                        "package",
+                                        requireActivity().packageName,
+                                        null
+                                    )
+                                startActivity(intent)
+                                requireActivity().finish()
                             }
                         }
                     }

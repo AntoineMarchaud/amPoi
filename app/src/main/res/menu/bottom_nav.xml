@@ -3,9 +3,11 @@
     <item
         android:id="@+id/mainFragment"
         android:contentDescription="@string/menu_main_description"
-        android:title="@string/menu_main_title" />
+        android:title="@string/menu_main_title"
+        android:icon="@drawable/ic_action_poi"/>
     <item
         android:id="@+id/bookmarksFragment"
         android:contentDescription="@string/menu_bookmarks_description"
-        android:title="@string/menu_bookmarks_title"/>
+        android:title="@string/menu_bookmarks_title"
+        android:icon="@drawable/ic_action_bookmark"/>
 </menu>

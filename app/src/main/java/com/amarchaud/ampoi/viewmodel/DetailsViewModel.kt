@@ -6,10 +6,11 @@ import android.content.Intent
 import android.net.Uri
 import android.util.Log
 import android.view.View
-import androidx.annotation.UiThread
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.amarchaud.ampoi.model.database.AppDao
+import com.amarchaud.ampoi.model.entity.VenueEntity
 import com.amarchaud.ampoi.model.network.details.VenueDetail
 import com.amarchaud.ampoi.network.FoursquareApi
 import com.google.android.gms.maps.model.LatLng
@@ -21,16 +22,22 @@ import javax.inject.Inject
 @HiltViewModel
 class DetailsViewModel @Inject constructor(
     app: Application,
-    private val myApi: FoursquareApi
+    private val myDao: AppDao,
+    private val myApi: FoursquareApi,
 ) : AndroidViewModel(app) {
 
     companion object {
         const val TAG = "DetailsViewModel"
     }
 
+    var isVenueInBookMarkedDb: MutableLiveData<Boolean> = MutableLiveData()
+
     var details: MutableLiveData<VenueDetail> = MutableLiveData()
-    var locationId: String = ""
-    var currentLocation: LatLng? = null
+
+    // given by screen
+    lateinit var venueEntity : VenueEntity
+    lateinit var currentLocation: LatLng
+    //
 
     var venueName: MutableLiveData<String> = MutableLiveData()
     var venueRating: MutableLiveData<String> = MutableLiveData()
@@ -51,20 +58,19 @@ class DetailsViewModel @Inject constructor(
      */
     fun refresh() {
 
-        if (locationId.isBlank()) {
+        if(venueEntity.id.isBlank())
             return
-        }
 
         viewModelScope.launch {
             val result = try {
-                myApi.getDetails(locationId)
-            } catch (e:Exception) {
+                myApi.getDetails(venueEntity.id)
+            } catch (e: Exception) {
                 Log.d(TAG, "error when calling getDetails : $e")
                 error.postValue(e.message)
                 null
             }
 
-            if(result?.response != null && result.response?.venue != null) {
+            if (result?.response != null && result.response?.venue != null) {
 
                 result.response?.venue?.let { venue ->
                     //successful response so parse the results and post them to the awaiting live data
@@ -119,7 +125,7 @@ class DetailsViewModel @Inject constructor(
 
     private fun category(venueDetail: VenueDetail): String {
 
-        if(venueDetail.categories.isNullOrEmpty())
+        if (venueDetail.categories.isNullOrEmpty())
             return ""
 
         return venueDetail.categories?.get(0)?.shortName ?: ""
@@ -146,7 +152,20 @@ class DetailsViewModel @Inject constructor(
         return if (phone.isNullOrBlank()) View.INVISIBLE else View.VISIBLE
     }
 
-    fun onWebsiteClick(context : Context, url: String) {
+    fun onWebsiteClick(context: Context, url: String) {
         context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+    }
+
+    fun onBookMarkedClick() {
+        viewModelScope.launch {
+            val toDelete = myDao.getFavoriteById(venueEntity.id)
+            if (toDelete == null) {
+                myDao.addFavorite(venueEntity)
+                isVenueInBookMarkedDb.postValue(true)
+            } else {
+                myDao.removeFavorite(venueEntity)
+                isVenueInBookMarkedDb.postValue(false)
+            }
+        }
     }
 }

@@ -2,6 +2,7 @@ package com.amarchaud.ampoi.viewmodel
 
 import android.Manifest
 import android.app.Application
+import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Looper
@@ -10,9 +11,9 @@ import androidx.core.app.ActivityCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.amarchaud.ampoi.model.app.VenueModel
+import com.amarchaud.ampoi.R
 import com.amarchaud.ampoi.model.database.AppDao
-import com.amarchaud.ampoi.model.entity.Favorite
+import com.amarchaud.ampoi.model.entity.VenueEntity
 import com.amarchaud.ampoi.model.network.search.SearchResponse
 import com.amarchaud.ampoi.model.network.search.Venue
 import com.amarchaud.ampoi.network.FoursquareApi
@@ -39,7 +40,7 @@ class MainViewModel @Inject constructor(
     var searchFilter: String = ""
 
     //** LiveData send to view
-    var venueModelsLiveData: MutableLiveData<ArrayList<VenueModel>> = MutableLiveData()
+    var venueModelsLiveData: MutableLiveData<ArrayList<VenueEntity>> = MutableLiveData()
     var locationResultsError: MutableLiveData<Int> = MutableLiveData()
 
     private val locationProviderClient: FusedLocationProviderClient by lazy {
@@ -105,25 +106,41 @@ class MainViewModel @Inject constructor(
     /**
      * Build VenueModel from VenueApi
      */
-    private fun buildResults(venues: List<Venue>): ArrayList<VenueModel> {
+    private fun buildResults(venues: List<Venue>): ArrayList<VenueEntity> {
 
         if (venues.isEmpty()) {
             return ArrayList()
         }
 
-        val resultsList = ArrayList<VenueModel>()
-        venues.forEach { resultsList.add(VenueModel(it)) }
+        val resultsList = ArrayList<VenueEntity>()
+        venues.forEach { venue ->
+
+            venue.id?.let {
+                resultsList.add(
+                    VenueEntity(
+                        venue.id!!,
+                        venue.name,
+                        venue.categories?.firstOrNull()?.pluralName,
+                        VenueEntity.buildIconPath(venue),
+                        venue.location?.distance ?: 0,
+                        venue.location?.lat ?: 0.0,
+                        venue.location?.lng ?: 0.0
+                    )
+                )
+            }
+        }
+
         return ArrayList(resultsList.sortedBy { it.locationDistance })
     }
 
-    fun onFavoriteClicked(id: String) {
+    fun onFavoriteClicked(venueEntity: VenueEntity) {
 
         viewModelScope.launch {
-            val favorite = myDao.getFavoriteById(id)
+            val favorite = myDao.getFavoriteById(venueEntity.id)
             if (favorite == null) {
-                myDao.addFavorite(Favorite(id))
+                myDao.addFavorite(venueEntity)
             } else {
-                myDao.removeFavoriteById(id)
+                myDao.removeFavorite(venueEntity)
             }
         }
     }
@@ -148,6 +165,25 @@ class MainViewModel @Inject constructor(
                 override fun onLocationResult(locationResult: LocationResult) {
                     for (location in locationResult.locations) {
                         currentLocation = location
+
+                        currentLocation?.let {
+                            val sharedPref = app.getSharedPreferences(
+                                app.getString(R.string.shared_pref),
+                                Context.MODE_PRIVATE
+                            )
+
+                            with(sharedPref.edit()) {
+                                putLong(
+                                    app.getString(R.string.saved_location_lat),
+                                    it.latitude.toBits()
+                                )
+                                putLong(
+                                    app.getString(R.string.saved_location_lon),
+                                    it.longitude.toBits()
+                                )
+                                apply()
+                            }
+                        }
                     }
                 }
 

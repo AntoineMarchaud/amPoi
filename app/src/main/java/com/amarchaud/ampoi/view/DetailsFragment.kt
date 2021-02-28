@@ -11,15 +11,16 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
+import com.amarchaud.amgraphqlartist.viewmodel.data.VenueToDeleteViewModel
 import com.amarchaud.ampoi.R
 import com.amarchaud.ampoi.databinding.FragmentDetailsBinding
 import com.amarchaud.ampoi.extensions.addMarker
 import com.amarchaud.ampoi.extensions.initMapView
 import com.amarchaud.ampoi.model.database.AppDao
-import com.amarchaud.ampoi.model.entity.Favorite
 import com.amarchaud.ampoi.model.network.details.VenueDetail
 import com.amarchaud.ampoi.utils.Errors
 import com.amarchaud.ampoi.viewmodel.DetailsViewModel
@@ -35,7 +36,6 @@ import kotlinx.coroutines.launch
 import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.overlay.Marker
-import java.util.concurrent.Executors
 import javax.inject.Inject
 
 
@@ -54,6 +54,10 @@ class DetailsFragment : Fragment() {
 
     private var snackBar: Snackbar? = null
 
+
+    // special viewModel
+    private val venueToDeleteViewModel: VenueToDeleteViewModel by activityViewModels()
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -67,9 +71,10 @@ class DetailsFragment : Fragment() {
 
         binding.lifecycleOwner = this@DetailsFragment
         binding.model = viewModel
-        viewModel.locationId = args.id
-        viewModel.currentLocation = args.LatLon
 
+        // give param to the ViewModel !
+        viewModel.venueEntity = args.venueEntity
+        viewModel.currentLocation = args.LatLon
 
         with(binding) {
 
@@ -164,8 +169,39 @@ class DetailsFragment : Fragment() {
                         }
                     }
                 }
-
             }
+
+            viewModel.isVenueInBookMarkedDb.observe(viewLifecycleOwner, { isFavorite ->
+                detailsIsFavorite.setImageDrawable(
+                    ContextCompat.getDrawable(
+                        requireContext(),
+                        if (isFavorite) R.drawable.star_circle else R.drawable.star_circle_disabled
+                    )
+                )
+
+                if (isFavorite) {
+
+                    activity?.runOnUiThread {
+                        view?.let {
+                            Snackbar.make(
+                                it,
+                                getString(R.string.added_favorite),
+                                Snackbar.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                } else {
+                    activity?.runOnUiThread {
+                        view?.let {
+                            Snackbar.make(
+                                it,
+                                getString(R.string.removed_favorite),
+                                Snackbar.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                }
+            })
         }
 
 
@@ -180,48 +216,9 @@ class DetailsFragment : Fragment() {
     private fun setupFavoriteAction(venueDetail: VenueDetail) {
         with(binding) {
             detailsIsFavorite.setOnClickListener {
-
                 venueDetail.id?.let { locationId ->
                     context?.let { context ->
-
-                        lifecycleScope.launch {
-                            val favorite = myDao.getFavoriteById(locationId)
-
-                            val isFavorite = favorite != null && favorite.id == locationId
-                            if (isFavorite) {
-                                myDao.removeFavoriteById(locationId)
-                                activity?.runOnUiThread {
-                                    view?.let {
-                                        Snackbar.make(
-                                            it,
-                                            getString(R.string.removed_favorite),
-                                            Snackbar.LENGTH_SHORT
-                                        ).show()
-                                    }
-                                }
-                            } else {
-                                myDao.addFavorite(Favorite(locationId))
-                                activity?.runOnUiThread {
-                                    view?.let {
-                                        Snackbar.make(
-                                            it,
-                                            getString(R.string.added_favorite),
-                                            Snackbar.LENGTH_SHORT
-                                        ).show()
-                                    }
-                                }
-                            }
-
-                            detailsIsFavorite.setImageDrawable(
-                                ContextCompat.getDrawable(
-                                    context,
-                                    if (!isFavorite) R.drawable.star_circle else R.drawable.star_circle_disabled
-                                )
-                            )
-
-                        }
-
-
+                        viewModel.onBookMarkedClick()
                     }
                 }
             }
@@ -238,18 +235,17 @@ class DetailsFragment : Fragment() {
 
             mapView.initMapView(GeoPoint(args.LatLon.latitude, args.LatLon.longitude))
             val positions: ArrayList<GeoPoint> = ArrayList()
-            // my position
-            viewModel.currentLocation?.let { latlng ->
-                val myPositionMarker = Marker(binding.mapView)
-                myPositionMarker.let { marker ->
-                    val geoPoint = GeoPoint(args.LatLon.latitude, args.LatLon.longitude)
-                    marker.position = geoPoint
-                    marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                    mapView.overlayManager.add(marker)
-                }
 
-                positions.add(myPositionMarker.position)
+            // my position
+            val myPositionMarker = Marker(binding.mapView)
+            myPositionMarker.let { marker ->
+                val geoPoint = GeoPoint(args.LatLon.latitude, args.LatLon.longitude)
+                marker.position = geoPoint
+                marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                mapView.overlayManager.add(marker)
             }
+
+            positions.add(myPositionMarker.position)
 
 
             //if all fields exist pin the detail location
@@ -300,6 +296,15 @@ class DetailsFragment : Fragment() {
     override fun onDestroy() {
         super.onDestroy()
         _binding = null
+
+        // send event to listener (in our case : previous Fragment)
+        if (viewModel.isVenueInBookMarkedDb.value != true) {
+            venueToDeleteViewModel.venueToDeleteLiveData.postValue(
+                VenueToDeleteViewModel.VenueToDelete(args.venueEntity)
+            )
+        } else {
+            venueToDeleteViewModel.venueToDeleteLiveData.postValue(null)
+        }
     }
 
 }

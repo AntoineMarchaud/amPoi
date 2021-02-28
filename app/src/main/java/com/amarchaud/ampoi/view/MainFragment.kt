@@ -21,12 +21,13 @@ import com.amarchaud.ampoi.R
 import com.amarchaud.ampoi.adapter.SearchResultsAdapter
 import com.amarchaud.ampoi.databinding.FragmentMainBinding
 import com.amarchaud.ampoi.interfaces.ILocationClickListener
-import com.amarchaud.ampoi.model.app.VenueModel
 import com.amarchaud.ampoi.model.database.AppDao
+import com.amarchaud.ampoi.model.entity.VenueEntity
 import com.amarchaud.ampoi.utils.Errors
 import com.amarchaud.ampoi.viewmodel.MainViewModel
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.snackbar.Snackbar
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.PermissionToken
@@ -57,6 +58,7 @@ class MainFragment : Fragment(), ILocationClickListener {
 
     private val viewModel: MainViewModel by viewModels()
 
+    var bottomNavView: BottomNavigationView? = null
 
     @Inject
     lateinit var myDao: AppDao
@@ -72,6 +74,8 @@ class MainFragment : Fragment(), ILocationClickListener {
     ): View {
 
         setHasOptionsMenu(true)
+
+        bottomNavView = requireActivity().findViewById(R.id.bottom_nav)
 
         // This callback will only be called when MyFragment is at least Started.
         val callback: OnBackPressedCallback =
@@ -109,7 +113,7 @@ class MainFragment : Fragment(), ILocationClickListener {
         with(binding) {
 
             mainToggleFullMap.setOnClickListener {
-                viewModel.venueModelsLiveData.value?.let { locations: ArrayList<VenueModel> ->
+                viewModel.venueModelsLiveData.value?.let { locations: ArrayList<VenueEntity> ->
                     viewModel.currentLocation?.let { latLng ->
                         findNavController().navigate(
                             MainFragmentDirections.actionMainFragmentToMapFragment(
@@ -171,58 +175,70 @@ class MainFragment : Fragment(), ILocationClickListener {
                 if (it != null) {
                     when (it) {
 
-                        MainViewModel.ERROR_CODE_RETRIEVE -> snackBar = Errors.showError(
-                            mainCoordinator,
-                            R.string.request_failed_main,
-                            R.string.retry
-                        ) {
-                            // when click on snackbar
-                            dismissSnackBar()
-                            viewModel.refresh()
+                        MainViewModel.ERROR_CODE_RETRIEVE -> {
+
+                            bottomNavView?.let {
+                                snackBar = Errors.showError(
+                                    it,
+                                    R.string.request_failed_main,
+                                    R.string.retry
+                                ) {
+                                    // when click on snackbar
+                                    dismissSnackBar()
+                                    viewModel.refresh()
+                                }
+                            }
                         }
                         MainViewModel.ERROR_CODE_NOGPS -> {
                             mainSwipeRefresh.isRefreshing = false
 
-                            snackBar = Errors.showError(
-                                mainCoordinator,
-                                R.string.error_no_gps,
-                                R.string.close
-                            ) {
-                                dismissSnackBar()
+                            bottomNavView?.let {
+                                snackBar = Errors.showError(
+                                    it,
+                                    R.string.error_no_gps,
+                                    R.string.close
+                                ) {
+                                    dismissSnackBar()
+                                }
                             }
+
                         }
                         MainViewModel.ERROR_CODE_NO_CURRENT_LOCATION -> {
 
                             mainSwipeRefresh.isRefreshing = false
 
-                            snackBar = Errors.showError(
-                                mainCoordinator,
-                                R.string.error_no_current_location,
-                                R.string.enable
-                            ) {
-                                dismissSnackBar()
+                            bottomNavView?.let {
+                                snackBar = Errors.showError(
+                                    it,
+                                    R.string.error_no_current_location,
+                                    R.string.enable
+                                ) {
+                                    dismissSnackBar()
+                                }
                             }
                         }
                         MainViewModel.ERROR_PERMISSION -> {
                             mainSwipeRefresh.isRefreshing = false
 
-                            snackBar = Errors.showError(
-                                mainCoordinator,
-                                R.string.error_location_permission_denied,
-                                R.string.enable
-                            ) {
+                            bottomNavView?.let {
+                                snackBar = Errors.showError(
+                                    it,
+                                    R.string.error_location_permission_denied,
+                                    R.string.enable
+                                ) {
 
-                                //launch app detail settings page to let the user enable the permission that they denied
-                                val intent = Intent()
-                                intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-                                intent.data =
-                                    Uri.fromParts(
-                                        "package",
-                                        requireActivity().packageName,
-                                        null
-                                    )
-                                startActivity(intent)
-                                requireActivity().finish()
+                                    //launch app detail settings page to let the user enable the permission that they denied
+                                    val intent = Intent()
+                                    intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                                    intent.data =
+                                        Uri.fromParts(
+                                            "package",
+                                            requireActivity().packageName,
+                                            null
+                                        )
+                                    startActivity(intent)
+                                    requireActivity().finish()
+                                }
                             }
                         }
                     }
@@ -376,7 +392,7 @@ class MainFragment : Fragment(), ILocationClickListener {
     /**
      * Check if the query is empty or not and animate the full map action button to the proper location
      */
-    private fun setFullMapVisibleState(venueModels: ArrayList<VenueModel>) {
+    private fun setFullMapVisibleState(venueModels: ArrayList<VenueEntity>) {
 
         with(binding) {
 
@@ -413,22 +429,19 @@ class MainFragment : Fragment(), ILocationClickListener {
 
     }
 
-    /**
-     * Called when click on on item
-     */
-    override fun onLocationClicked(id: String) {
 
+    override fun onLocationClicked(venueEntity: VenueEntity) {
         viewModel.currentLocation?.let { currentLocation ->
             findNavController().navigate(
                 MainFragmentDirections.actionMainFragmentToDetailsFragment(
-                    id,
-                    LatLng(currentLocation.latitude, currentLocation.longitude)
+                    venueEntity = venueEntity,
+                    LatLon = LatLng(currentLocation.latitude, currentLocation.longitude)
                 )
             )
         }
     }
 
-    override fun onFavoriteClicked(id: String) {
-        viewModel.onFavoriteClicked(id)
+    override fun onFavoriteClicked(venueEntity: VenueEntity) {
+        viewModel.onFavoriteClicked(venueEntity)
     }
 }

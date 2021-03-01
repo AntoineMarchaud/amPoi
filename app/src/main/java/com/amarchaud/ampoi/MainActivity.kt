@@ -27,7 +27,7 @@ class MainActivity : AppCompatActivity() {
 
         appBarConfiguration = AppBarConfiguration(
             setOf(
-                R.id.mainFragment
+                R.id.mainFragment, R.id.bookmarksFragment
             )
         )
 

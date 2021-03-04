@@ -15,7 +15,6 @@ import com.amarchaud.ampoi.model.database.AppDao
 import com.amarchaud.ampoi.model.entity.VenueEntity
 import com.amarchaud.ampoi.model.network.details.VenueDetail
 import com.amarchaud.ampoi.network.FoursquareApi
-import com.google.android.gms.maps.model.LatLng
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import java.text.DecimalFormat
@@ -41,18 +40,45 @@ class DetailsViewModel @Inject constructor(
     lateinit var venueApp: VenueApp
     //
 
-    var venueName: MutableLiveData<String> = MutableLiveData()
-    var venueRating: MutableLiveData<String> = MutableLiveData()
-    var venueBar: MutableLiveData<Float> = MutableLiveData()
-    var venueReviews: MutableLiveData<Int> = MutableLiveData()
+    var _venueName = MutableLiveData<String>()
+    val venueName: LiveData<String>
+        get() = _venueName
 
-    var venueHours: MutableLiveData<String> = MutableLiveData()
-    var venueAddress: MutableLiveData<String> = MutableLiveData()
-    var venueCategory: MutableLiveData<String> = MutableLiveData()
-    var venueWebsite: MutableLiveData<String> = MutableLiveData()
-    var venuePhone: MutableLiveData<String> = MutableLiveData()
+    var _venueRating = MutableLiveData<String>()
+    val venueRating: MutableLiveData<String>
+        get() = _venueRating
 
-    var error: MutableLiveData<String> = MutableLiveData()
+    var _venueBar = MutableLiveData<Float>()
+    val venueBar: MutableLiveData<Float>
+        get() = _venueBar
+
+    var _venueReviews = MutableLiveData<Int>()
+    val venueReviews: MutableLiveData<Int>
+        get() = _venueReviews
+
+    var _venueHours = MutableLiveData<String>()
+    val venueHours: MutableLiveData<String>
+        get() = _venueHours
+
+    var _venueAddress = MutableLiveData<String>()
+    val venueAddress: MutableLiveData<String>
+        get() = _venueAddress
+
+    var _venueCategory = MutableLiveData<String>()
+    val venueCategory: MutableLiveData<String>
+        get() = _venueCategory
+
+    var _venueWebsite = MutableLiveData<String>()
+    val venueWebsite: MutableLiveData<String>
+        get() = _venueWebsite
+
+    var _venuePhone = MutableLiveData<String>()
+    val venuePhone: MutableLiveData<String>
+        get() = _venuePhone
+
+    var _error = MutableLiveData<String>()
+    val error: MutableLiveData<String>
+        get() = _error
 
 
     /**
@@ -77,16 +103,16 @@ class DetailsViewModel @Inject constructor(
                 _details.postValue(venue)
 
                 //post to live datas bound fields
-                venueName.value = venue.name
-                venueRating.value = formatRatings(venue)
-                venueBar.value = ratingBar(venue)
+                _venueName.value = venue.name
+                _venueRating.value = formatRatings(venue)
+                _venueBar.value = ratingBar(venue)
                 //venueBarColor.postValue(ratingBarColor(venue.ratingColor))
-                venueReviews.value = venue.ratingSignals
-                venueHours.value = venue.hours?.status ?: ""
-                venueAddress.value = address(venue)
-                venueCategory.value = category(venue)
-                venueWebsite.value = website(venue)
-                venuePhone.value = phone(venue)
+                _venueReviews.value = venue.ratingSignals
+                _venueHours.value = venue.hours?.status ?: ""
+                _venueAddress.value = address(venue)
+                _venueCategory.value = category(venue)
+                _venueWebsite.value = website(venue)
+                _venuePhone.value = phone(venue)
             } ?: error.postValue("Invalid data for location details")
 
 

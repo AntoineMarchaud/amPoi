@@ -48,15 +48,8 @@ class BookmarksViewModel @Inject constructor(
                 it.id == venueApp.id
             }
             if (pos >= 0) {
-
                 myDao.removeFavoriteById(venueApp.id!!)
                 refresh()
-
-                /*
-                venuesRecyclerAdapter.setArtistWithoutRefresh(myDao.getAllFavorites())
-                requireActivity().runOnUiThread {
-                    venuesRecyclerAdapter.notifyItemRemoved(pos)
-                }*/
             }
         }
     }

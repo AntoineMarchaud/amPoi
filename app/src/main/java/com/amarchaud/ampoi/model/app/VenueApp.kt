@@ -5,19 +5,22 @@ import android.os.Parcelable
 import com.amarchaud.ampoi.interfaces.ILocationResult
 import com.amarchaud.ampoi.model.entity.VenueEntity
 import com.amarchaud.ampoi.model.network.search.Venue
+import kotlinx.parcelize.Parcelize
 
-class VenueApp() : Parcelable, ILocationResult {
-
-    var id: String? = null
-    var locationName: String? = null
-    var locationCategory: String? = null
-    var locationIcon: String? = null
-    var locationDistance: Int? = 0
-    var lat: Double? = null
-    var lng: Double? = null
+@Parcelize
+data class VenueApp(
+    var id: String? = null,
+    var locationName: String? = null,
+    var locationCategory: String? = null,
+    var locationIcon: String? = null,
+    var locationDistance: Int? = 0,
+    var lat: Double? = null,
+    var lng: Double? = null,
     var isFavorite: Boolean = false
+) : Parcelable, ILocationResult {
 
 
+    /*
     constructor(parcel: Parcel) : this() {
         id = parcel.readString()
         locationName = parcel.readString()
@@ -52,7 +55,7 @@ class VenueApp() : Parcelable, ILocationResult {
         override fun newArray(size: Int): Array<VenueApp?> {
             return arrayOfNulls(size)
         }
-    }
+    }*/
 
 
     // from api to app

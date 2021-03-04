@@ -2,6 +2,7 @@ package com.amarchaud.ampoi.model.database
 
 import androidx.room.*
 import com.amarchaud.ampoi.model.entity.VenueEntity
+import java.util.concurrent.Flow
 
 
 @Dao

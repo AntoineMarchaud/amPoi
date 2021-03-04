@@ -9,9 +9,11 @@ import android.os.Looper
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.amarchaud.ampoi.R
+import com.amarchaud.ampoi.model.app.VenueApp
 import com.amarchaud.ampoi.model.database.AppDao
 import com.amarchaud.ampoi.model.entity.VenueEntity
 import com.amarchaud.ampoi.model.network.search.SearchResponse
@@ -39,9 +41,14 @@ class MainViewModel @Inject constructor(
 
     var searchFilter: String = ""
 
-    //** LiveData send to view
-    var venueModelsLiveData: MutableLiveData<ArrayList<VenueEntity>> = MutableLiveData()
-    var locationResultsError: MutableLiveData<Int> = MutableLiveData()
+    private var _venueModelsLiveData = MutableLiveData<ArrayList<VenueApp>>()
+    val venueModelsLiveData: LiveData<ArrayList<VenueApp>>
+        get() = _venueModelsLiveData
+
+    private var _locationResultsError = MutableLiveData<Int>()
+    val locationResultsError: LiveData<Int>
+        get() = _locationResultsError
+
 
     private val locationProviderClient: FusedLocationProviderClient by lazy {
         LocationServices.getFusedLocationProviderClient(app)
@@ -67,7 +74,7 @@ class MainViewModel @Inject constructor(
 
     fun refresh() {
         if (currentLocation == null) {
-            locationResultsError.postValue(ERROR_CODE_NO_CURRENT_LOCATION)
+            _locationResultsError.postValue(ERROR_CODE_NO_CURRENT_LOCATION)
             return
         }
 
@@ -81,7 +88,7 @@ class MainViewModel @Inject constructor(
 
         if (query.isBlank()) {
             Log.d(TAG, "Query empty so no request will be made")
-            venueModelsLiveData.postValue(ArrayList())
+            _venueModelsLiveData.postValue(ArrayList())
             return
         }
 
@@ -96,9 +103,9 @@ class MainViewModel @Inject constructor(
                 null
             }
             if (response?.response == null || response.response?.venues == null) {
-                locationResultsError.postValue(ERROR_CODE_RETRIEVE)
+                _locationResultsError.postValue(ERROR_CODE_RETRIEVE)
             } else {
-                venueModelsLiveData.postValue(buildResults(response.response?.venues!!))
+                _venueModelsLiveData.postValue(buildResults(response.response?.venues!!))
             }
         }
     }
@@ -106,26 +113,24 @@ class MainViewModel @Inject constructor(
     /**
      * Build VenueModel from VenueApi
      */
-    private fun buildResults(venues: List<Venue>): ArrayList<VenueEntity> {
+    private suspend fun buildResults(venues: List<Venue>): ArrayList<VenueApp> {
 
         if (venues.isEmpty()) {
             return ArrayList()
         }
 
-        val resultsList = ArrayList<VenueEntity>()
+        val resultsList = ArrayList<VenueApp>()
         venues.forEach { venue ->
 
             venue.id?.let {
                 resultsList.add(
-                    VenueEntity(
-                        venue.id!!,
-                        venue.name,
-                        venue.categories?.firstOrNull()?.pluralName,
-                        VenueEntity.buildIconPath(venue),
-                        venue.location?.distance ?: 0,
-                        venue.location?.lat ?: 0.0,
-                        venue.location?.lng ?: 0.0
-                    )
+                    VenueApp(venue).apply {
+                        viewModelScope.launch {
+                            id?.let {
+                                isFavorite = myDao.getFavoriteById(it) != null
+                            }
+                        }.join() // very important to wait !
+                    }
                 )
             }
         }
@@ -133,15 +138,18 @@ class MainViewModel @Inject constructor(
         return ArrayList(resultsList.sortedBy { it.locationDistance })
     }
 
-    fun onFavoriteClicked(venueEntity: VenueEntity) {
+    fun onFavoriteClicked(venueApp: VenueApp) {
 
         viewModelScope.launch {
+
+            val venueEntity = VenueEntity(venueApp)
             val favorite = myDao.getFavoriteById(venueEntity.id)
             if (favorite == null) {
                 myDao.addFavorite(venueEntity)
             } else {
                 myDao.removeFavorite(venueEntity)
             }
+
         }
     }
 
@@ -155,7 +163,7 @@ class MainViewModel @Inject constructor(
                 Manifest.permission.ACCESS_COARSE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            locationResultsError.postValue(ERROR_PERMISSION)
+            _locationResultsError.postValue(ERROR_PERMISSION)
             return
         }
 
@@ -190,9 +198,9 @@ class MainViewModel @Inject constructor(
                 override fun onLocationAvailability(locationAvailability: LocationAvailability) {
                     if (!locationAvailability.isLocationAvailable) {
                         currentLocation = null
-                        locationResultsError.postValue(ERROR_CODE_NOGPS)
+                        _locationResultsError.postValue(ERROR_CODE_NOGPS)
                     } else {
-                        locationResultsError.postValue(null)
+                        _locationResultsError.postValue(-1)
                     }
                 }
             },

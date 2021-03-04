@@ -1,9 +1,8 @@
 package com.amarchaud.ampoi.viewmodel
 
 import android.app.Application
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
+import com.amarchaud.ampoi.model.app.VenueApp
 import com.amarchaud.ampoi.model.database.AppDao
 import com.amarchaud.ampoi.model.entity.VenueEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,21 +15,49 @@ class BookmarksViewModel @Inject constructor(
     val myDao: AppDao
 ) : AndroidViewModel(app) {
 
-    var loadingLiveData : MutableLiveData<Boolean> = MutableLiveData()
-    var poiBookmarkedLiveData: MutableLiveData<List<VenueEntity>> = MutableLiveData()
+    private var _loadingLiveData = MutableLiveData<Boolean>()
+    val loadingLiveData: LiveData<Boolean>
+        get() = _loadingLiveData
+
+    private var _poiBookmarkedLiveData= MutableLiveData<List<VenueApp>>()
+    val poiBookmarkedLiveData: LiveData<List<VenueApp>>
+        get() = _poiBookmarkedLiveData
 
     init {
         viewModelScope.launch {
-            loadingLiveData.postValue(true)
-            poiBookmarkedLiveData.postValue(myDao.getAllFavorites())
-            loadingLiveData.postValue(false)
+            _loadingLiveData.postValue(true)
+            refresh()
+            _loadingLiveData.postValue(false)
         }
     }
 
 
     fun refresh() {
         viewModelScope.launch {
-            poiBookmarkedLiveData.postValue(myDao.getAllFavorites())
+            _poiBookmarkedLiveData.postValue(myDao.getAllFavorites().map { VenueApp(it) })
+        }
+    }
+
+    fun deleteFavorite(venueApp: VenueApp) {
+
+        if (venueApp.id == null)
+            return
+
+        viewModelScope.launch {
+            val pos = myDao.getAllFavorites().indexOfFirst {
+                it.id == venueApp.id
+            }
+            if (pos >= 0) {
+
+                myDao.removeFavoriteById(venueApp.id!!)
+                refresh()
+
+                /*
+                venuesRecyclerAdapter.setArtistWithoutRefresh(myDao.getAllFavorites())
+                requireActivity().runOnUiThread {
+                    venuesRecyclerAdapter.notifyItemRemoved(pos)
+                }*/
+            }
         }
     }
 

@@ -15,7 +15,6 @@ import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
-import com.amarchaud.amgraphqlartist.viewmodel.data.VenueToDeleteViewModel
 import com.amarchaud.ampoi.R
 import com.amarchaud.ampoi.databinding.FragmentDetailsBinding
 import com.amarchaud.ampoi.extensions.addMarker
@@ -24,6 +23,7 @@ import com.amarchaud.ampoi.model.database.AppDao
 import com.amarchaud.ampoi.model.network.details.VenueDetail
 import com.amarchaud.ampoi.utils.Errors
 import com.amarchaud.ampoi.viewmodel.DetailsViewModel
+import com.amarchaud.ampoi.viewmodel.data.VenueToDeleteViewModel
 import com.google.android.material.snackbar.Snackbar
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.PermissionToken
@@ -44,9 +44,6 @@ class DetailsFragment : Fragment() {
 
     private var _binding: FragmentDetailsBinding? = null
     private val binding get() = _binding!!
-
-    @Inject
-    lateinit var myDao: AppDao
 
     private val args: DetailsFragmentArgs by navArgs()
 
@@ -73,8 +70,7 @@ class DetailsFragment : Fragment() {
         binding.model = viewModel
 
         // give param to the ViewModel !
-        viewModel.venueEntity = args.venueEntity
-        viewModel.currentLocation = args.LatLon
+        viewModel.venueApp = args.venueApp
 
         with(binding) {
 
@@ -153,55 +149,21 @@ class DetailsFragment : Fragment() {
             venueDetail.id?.let { locationId ->
                 context?.let { context ->
 
-                    lifecycleScope.launch {
-                        val favorite = myDao.getFavoriteById(locationId)
-
-                        val isFavorite = favorite != null && favorite.id == locationId
-
-                        requireActivity().runOnUiThread {
-                            detailsIsFavorite.setImageDrawable(
-                                ContextCompat.getDrawable(
-                                    context,
-                                    if (isFavorite) R.drawable.star_circle else R.drawable.star_circle_disabled
-                                )
+                    requireActivity().runOnUiThread {
+                        detailsIsFavorite.setImageDrawable(
+                            ContextCompat.getDrawable(
+                                context,
+                                if (args.venueApp.isFavorite)
+                                    R.drawable.star_circle
+                                else
+                                    R.drawable.star_circle_disabled
                             )
-                            detailsIsFavorite.visibility = View.VISIBLE
-                        }
+                        )
+                        detailsIsFavorite.visibility = View.VISIBLE
                     }
+
                 }
             }
-
-            viewModel.isVenueInBookMarkedDb.observe(viewLifecycleOwner, { isFavorite ->
-                detailsIsFavorite.setImageDrawable(
-                    ContextCompat.getDrawable(
-                        requireContext(),
-                        if (isFavorite) R.drawable.star_circle else R.drawable.star_circle_disabled
-                    )
-                )
-
-                if (isFavorite) {
-
-                    activity?.runOnUiThread {
-                        view?.let {
-                            Snackbar.make(
-                                it,
-                                getString(R.string.added_favorite),
-                                Snackbar.LENGTH_SHORT
-                            ).show()
-                        }
-                    }
-                } else {
-                    activity?.runOnUiThread {
-                        view?.let {
-                            Snackbar.make(
-                                it,
-                                getString(R.string.removed_favorite),
-                                Snackbar.LENGTH_SHORT
-                            ).show()
-                        }
-                    }
-                }
-            })
         }
 
 
@@ -215,10 +177,40 @@ class DetailsFragment : Fragment() {
      */
     private fun setupFavoriteAction(venueDetail: VenueDetail) {
         with(binding) {
+
             detailsIsFavorite.setOnClickListener {
                 venueDetail.id?.let { locationId ->
                     context?.let { context ->
+
                         viewModel.onBookMarkedClick()
+
+                        detailsIsFavorite.setImageDrawable(
+                            ContextCompat.getDrawable(
+                                requireContext(),
+                                if (viewModel.venueApp.isFavorite)
+                                    R.drawable.star_circle
+                                else
+                                    R.drawable.star_circle_disabled
+                            )
+                        )
+
+                        if (viewModel.venueApp.isFavorite) {
+                            view?.let {
+                                Snackbar.make(
+                                    it,
+                                    getString(R.string.added_favorite),
+                                    Snackbar.LENGTH_SHORT
+                                ).show()
+                            }
+                        } else {
+                            view?.let {
+                                Snackbar.make(
+                                    it,
+                                    getString(R.string.removed_favorite),
+                                    Snackbar.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
                     }
                 }
             }
@@ -297,13 +289,14 @@ class DetailsFragment : Fragment() {
         super.onDestroy()
         _binding = null
 
-        // send event to listener (in our case : previous Fragment)
-        if (viewModel.isVenueInBookMarkedDb.value != true) {
-            venueToDeleteViewModel.venueToDeleteLiveData.postValue(
-                VenueToDeleteViewModel.VenueToDelete(args.venueEntity)
+        if (viewModel.venueApp.isFavorite) {
+            venueToDeleteViewModel.venueToDelete.postValue(
+                null
             )
         } else {
-            venueToDeleteViewModel.venueToDeleteLiveData.postValue(null)
+            venueToDeleteViewModel.venueToDelete.postValue(
+                VenueToDeleteViewModel.VenueModified(viewModel.venueApp)
+            )
         }
     }
 

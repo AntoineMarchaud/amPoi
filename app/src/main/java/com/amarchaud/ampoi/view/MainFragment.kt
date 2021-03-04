@@ -21,13 +21,11 @@ import com.amarchaud.ampoi.R
 import com.amarchaud.ampoi.adapter.SearchResultsAdapter
 import com.amarchaud.ampoi.databinding.FragmentMainBinding
 import com.amarchaud.ampoi.interfaces.ILocationClickListener
-import com.amarchaud.ampoi.model.database.AppDao
-import com.amarchaud.ampoi.model.entity.VenueEntity
+import com.amarchaud.ampoi.model.app.VenueApp
 import com.amarchaud.ampoi.utils.Errors
 import com.amarchaud.ampoi.viewmodel.MainViewModel
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.snackbar.Snackbar
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.PermissionToken
@@ -40,7 +38,6 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 
 @AndroidEntryPoint
@@ -57,9 +54,6 @@ class MainFragment : Fragment(), ILocationClickListener {
     private val binding get() = _binding!!
 
     private val viewModel: MainViewModel by viewModels()
-
-    @Inject
-    lateinit var myDao: AppDao
 
     private var snackBar: Snackbar? = null
     private var searchView: SearchView? = null // will be setted in onPrepareOptionsMenu
@@ -104,12 +98,10 @@ class MainFragment : Fragment(), ILocationClickListener {
             }
         }
 
-        searchResultAdapter.myDao = myDao
-
         with(binding) {
 
             mainToggleFullMap.setOnClickListener {
-                viewModel.venueModelsLiveData.value?.let { locations: ArrayList<VenueEntity> ->
+                viewModel.venueModelsLiveData.value?.let { locations: ArrayList<VenueApp> ->
                     viewModel.currentLocation?.let { latLng ->
                         findNavController().navigate(
                             MainFragmentDirections.actionMainFragmentToMapFragment(
@@ -162,7 +154,6 @@ class MainFragment : Fragment(), ILocationClickListener {
                 setFullMapVisibleState(it)
             })
 
-
             /**
              * Called when auto geo loc not possible
              */
@@ -173,17 +164,16 @@ class MainFragment : Fragment(), ILocationClickListener {
 
                         MainViewModel.ERROR_CODE_RETRIEVE -> {
 
-                            view?.let {
-                                snackBar = Errors.showError(
-                                    it,
-                                    R.string.request_failed_main,
-                                    R.string.retry
-                                ) {
-                                    // when click on snackbar
-                                    dismissSnackBar()
-                                    viewModel.refresh()
-                                }
+                            snackBar = Errors.showError(
+                                mainCoordinator,
+                                R.string.request_failed_main,
+                                R.string.retry
+                            ) {
+                                // when click on snackbar
+                                dismissSnackBar()
+                                viewModel.refresh()
                             }
+
                         }
                         MainViewModel.ERROR_CODE_NOGPS -> {
                             mainSwipeRefresh.isRefreshing = false
@@ -378,7 +368,7 @@ class MainFragment : Fragment(), ILocationClickListener {
     /**
      * Check if the query is empty or not and animate the full map action button to the proper location
      */
-    private fun setFullMapVisibleState(venueModels: ArrayList<VenueEntity>) {
+    private fun setFullMapVisibleState(venueModels: ArrayList<VenueApp>) {
 
         with(binding) {
 
@@ -416,18 +406,18 @@ class MainFragment : Fragment(), ILocationClickListener {
     }
 
 
-    override fun onLocationClicked(venueEntity: VenueEntity) {
+    override fun onLocationClicked(venueApp: VenueApp) {
         viewModel.currentLocation?.let { currentLocation ->
             findNavController().navigate(
                 MainFragmentDirections.actionMainFragmentToDetailsFragment(
-                    venueEntity = venueEntity,
+                    venueApp = venueApp,
                     LatLon = LatLng(currentLocation.latitude, currentLocation.longitude)
                 )
             )
         }
     }
 
-    override fun onFavoriteClicked(venueEntity: VenueEntity) {
-        viewModel.onFavoriteClicked(venueEntity)
+    override fun onFavoriteClicked(venueApp: VenueApp) {
+        viewModel.onFavoriteClicked(venueApp)
     }
 }

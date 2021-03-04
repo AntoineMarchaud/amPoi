@@ -7,8 +7,10 @@ import android.net.Uri
 import android.util.Log
 import android.view.View
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.amarchaud.ampoi.model.app.VenueApp
 import com.amarchaud.ampoi.model.database.AppDao
 import com.amarchaud.ampoi.model.entity.VenueEntity
 import com.amarchaud.ampoi.model.network.details.VenueDetail
@@ -30,13 +32,13 @@ class DetailsViewModel @Inject constructor(
         const val TAG = "DetailsViewModel"
     }
 
-    var isVenueInBookMarkedDb: MutableLiveData<Boolean> = MutableLiveData()
+    private var _details = MutableLiveData<VenueDetail>()
+    val details: LiveData<VenueDetail>
+        get() = _details
 
-    var details: MutableLiveData<VenueDetail> = MutableLiveData()
 
     // given by screen
-    lateinit var venueEntity : VenueEntity
-    lateinit var currentLocation: LatLng
+    lateinit var venueApp: VenueApp
     //
 
     var venueName: MutableLiveData<String> = MutableLiveData()
@@ -58,40 +60,35 @@ class DetailsViewModel @Inject constructor(
      */
     fun refresh() {
 
-        if(venueEntity.id.isBlank())
+        if (venueApp.id.isNullOrEmpty())
             return
 
         viewModelScope.launch {
             val result = try {
-                myApi.getDetails(venueEntity.id)
+                myApi.getDetails(venueApp.id!!)
             } catch (e: Exception) {
                 Log.d(TAG, "error when calling getDetails : $e")
                 error.postValue(e.message)
                 null
             }
 
-            if (result?.response != null && result.response?.venue != null) {
+            result?.response?.venue?.let { venue ->
+                //successful response so parse the results and post them to the awaiting live data
+                _details.postValue(venue)
 
-                result.response?.venue?.let { venue ->
-                    //successful response so parse the results and post them to the awaiting live data
-                    details.postValue(venue)
+                //post to live datas bound fields
+                venueName.value = venue.name
+                venueRating.value = formatRatings(venue)
+                venueBar.value = ratingBar(venue)
+                //venueBarColor.postValue(ratingBarColor(venue.ratingColor))
+                venueReviews.value = venue.ratingSignals
+                venueHours.value = venue.hours?.status ?: ""
+                venueAddress.value = address(venue)
+                venueCategory.value = category(venue)
+                venueWebsite.value = website(venue)
+                venuePhone.value = phone(venue)
+            } ?: error.postValue("Invalid data for location details")
 
-                    //post to live datas bound fields
-                    venueName.value = venue.name
-                    venueRating.value = formatRatings(venue)
-                    venueBar.value = ratingBar(venue)
-                    //venueBarColor.postValue(ratingBarColor(venue.ratingColor))
-                    venueReviews.value = venue.ratingSignals
-                    venueHours.value = venue.hours?.status ?: ""
-                    venueAddress.value = address(venue)
-                    venueCategory.value = category(venue)
-                    venueWebsite.value = website(venue)
-                    venuePhone.value = phone(venue)
-                }
-
-            } else {
-                error.postValue("Invalid data for location details")
-            }
 
         }
     }
@@ -157,14 +154,18 @@ class DetailsViewModel @Inject constructor(
     }
 
     fun onBookMarkedClick() {
+
+        if (venueApp.id.isNullOrEmpty())
+            return
+
+        venueApp.isFavorite = !venueApp.isFavorite
+
         viewModelScope.launch {
-            val toDelete = myDao.getFavoriteById(venueEntity.id)
+            val toDelete = myDao.getFavoriteById(venueApp.id!!)
             if (toDelete == null) {
-                myDao.addFavorite(venueEntity)
-                isVenueInBookMarkedDb.postValue(true)
+                myDao.addFavorite(VenueEntity(venueApp))
             } else {
-                myDao.removeFavorite(venueEntity)
-                isVenueInBookMarkedDb.postValue(false)
+                myDao.removeFavorite(toDelete)
             }
         }
     }

@@ -13,6 +13,7 @@ import androidx.navigation.fragment.navArgs
 import com.amarchaud.ampoi.R
 import com.amarchaud.ampoi.databinding.FragmentMapBinding
 import com.amarchaud.ampoi.extensions.initMapView
+import com.amarchaud.ampoi.model.app.VenueApp
 import com.amarchaud.ampoi.model.entity.VenueEntity
 import com.amarchaud.ampoi.viewmodel.MapViewModel
 import com.google.android.gms.maps.model.LatLng
@@ -34,7 +35,7 @@ class MapFragment : Fragment() {
 
     private val viewModel: MapViewModel by viewModels()
 
-    private val mapMarkerToData: HashMap<Marker, VenueEntity> = HashMap()
+    private val mapMarkerToData: HashMap<Marker, VenueApp> = HashMap()
 
     private val args: MapFragmentArgs by navArgs()
 
@@ -115,7 +116,7 @@ class MapFragment : Fragment() {
                 venueModel?.id?.let { id ->
                     findNavController().navigate(
                         MapFragmentDirections.actionMapFragmentToDetailsFragment(
-                            venueEntity = venueModel,
+                            venueApp = venueModel,
                             LatLon = LatLng(args.LatLon.latitude, args.LatLon.longitude) // current pos
                         )
                     )

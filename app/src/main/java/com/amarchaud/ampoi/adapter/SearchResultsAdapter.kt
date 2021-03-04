@@ -7,8 +7,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.amarchaud.ampoi.R
 import com.amarchaud.ampoi.databinding.ItemLocationResultBinding
 import com.amarchaud.ampoi.interfaces.ILocationClickListener
-import com.amarchaud.ampoi.model.database.AppDao
-import com.amarchaud.ampoi.model.entity.VenueEntity
+import com.amarchaud.ampoi.model.app.VenueApp
 import com.amarchaud.ampoi.utils.DiffCallback
 import com.bumptech.glide.Glide
 import kotlinx.coroutines.GlobalScope
@@ -18,8 +17,7 @@ import kotlin.math.roundToInt
 class SearchResultsAdapter(private val onClickListener: ILocationClickListener) :
     RecyclerView.Adapter<SearchResultsAdapter.ItemLocationResultViewHolder>() {
 
-    private var venueModels: List<VenueEntity> = ArrayList()
-    var myDao: AppDao? = null
+    private var venueModels: List<VenueApp> = ArrayList()
 
     override fun onCreateViewHolder(
         parent: ViewGroup,
@@ -33,18 +31,18 @@ class SearchResultsAdapter(private val onClickListener: ILocationClickListener) 
     override fun onBindViewHolder(holder: ItemLocationResultViewHolder, position: Int) {
 
         val context = holder.itemView.context
-        val venueEntity = venueModels[position]
+        val venueApp = venueModels[position]
 
         // binding
         with(holder.binding) {
 
             //name and category display
-            locationName.text = venueEntity.locationName ?: ""
-            locationCategory.text = venueEntity.locationCategory ?: ""
+            locationName.text = venueApp.locationName ?: ""
+            locationCategory.text = venueApp.locationCategory ?: ""
 
             //distance display
             locationDistance.text = ""
-            venueEntity.locationDistance?.let { meters ->
+            venueApp.locationDistance?.let { meters ->
                 //if longer than a mile display miles
                 if (meters >= 1000) {
 
@@ -64,12 +62,16 @@ class SearchResultsAdapter(private val onClickListener: ILocationClickListener) 
                 }
             }
 
-            if (venueEntity.locationIcon.isEmpty()) {
+
+
+
+
+            if (venueApp.locationIcon.isNullOrEmpty()) {
                 locationImage.setImageResource(R.drawable.unknown)
             } else {
                 try {
                     Glide.with(context)
-                        .load(venueEntity.locationIcon)
+                        .load(venueApp.locationIcon) // use placeholder
                         .error(R.drawable.unknown)
                         .into(locationImage)
                 } catch (e: IllegalArgumentException) {
@@ -78,11 +80,11 @@ class SearchResultsAdapter(private val onClickListener: ILocationClickListener) 
             }
 
             //set the initial state of the favorites icon by checking if its a favorite in the database
-            setupFavoriteIndicator(holder.binding, venueEntity, onClickListener)
+            setupFavoriteIndicator(holder.binding, venueApp, onClickListener)
 
             // callback to the entire view
             holder.itemView.setOnClickListener {
-                onClickListener.onLocationClicked(venueEntity)
+                onClickListener.onLocationClicked(venueApp)
             }
         }
     }
@@ -95,7 +97,7 @@ class SearchResultsAdapter(private val onClickListener: ILocationClickListener) 
     inner class ItemLocationResultViewHolder(var binding: ItemLocationResultBinding) :
         RecyclerView.ViewHolder(binding.root)
 
-    fun setArtistWithoutRefresh(locations: List<VenueEntity>) {
+    fun setArtistWithoutRefresh(locations: List<VenueApp>) {
         venueModels = locations
     }
 
@@ -103,7 +105,7 @@ class SearchResultsAdapter(private val onClickListener: ILocationClickListener) 
      * Callable from outside (View)
      * Automatically detect if view must be refreshed
      */
-    fun setLocationResults(locations: List<VenueEntity>) {
+    fun setLocationResults(locations: List<VenueApp>) {
         if (locations.isNullOrEmpty()) {
             venueModels = locations
             notifyDataSetChanged()
@@ -120,30 +122,20 @@ class SearchResultsAdapter(private val onClickListener: ILocationClickListener) 
 
     private fun setupFavoriteIndicator(
         binding: ItemLocationResultBinding,
-        locationResult: VenueEntity,
+        venueApp: VenueApp,
         clickListener: ILocationClickListener
     ) {
 
         with(binding) {
 
-            locationFavorite.isChecked = false //set default
-
-            locationResult.id.let { locationId ->
-
-                GlobalScope.launch {
-                    if (myDao != null) {
-                        val favorite = myDao!!.getFavoriteById(locationId)
-                        if (favorite != null) {
-                            locationFavorite.isChecked = favorite.id == locationId
-                        }
-                    }
-                }
-            }
+            locationFavorite.isChecked = venueApp.isFavorite //set default
 
             //handle the status changes for favorites when the user clicks the star
             locationFavorite.setOnClickListener {
-                locationResult.id.let {
-                    clickListener.onFavoriteClicked(locationResult)
+                venueApp.id.let {
+                    venueApp.isFavorite = !venueApp.isFavorite
+                    locationFavorite.isChecked = venueApp.isFavorite //set new value
+                    clickListener.onFavoriteClicked(venueApp)
                 }
             }
         }

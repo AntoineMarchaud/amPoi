@@ -26,7 +26,7 @@
             app:argType="com.google.android.gms.maps.model.LatLng" />
         <argument
             android:name="venues"
-            app:argType="com.amarchaud.ampoi.model.entity.VenueEntity[]" />
+            app:argType="com.amarchaud.ampoi.model.app.VenueApp[]" />
         <action
             android:id="@+id/action_mapFragment_to_detailsFragment"
             app:destination="@id/detailsFragment" />
@@ -40,8 +40,8 @@
             android:name="LatLon"
             app:argType="com.google.android.gms.maps.model.LatLng" />
         <argument
-            android:name="venueEntity"
-            app:argType="com.amarchaud.ampoi.model.entity.VenueEntity" />
+            android:name="venueApp"
+            app:argType="com.amarchaud.ampoi.model.app.VenueApp" />
     </fragment>
     <fragment
         android:id="@+id/bookmarksFragment"

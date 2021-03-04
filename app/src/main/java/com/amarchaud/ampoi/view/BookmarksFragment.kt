@@ -12,18 +12,16 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.amarchaud.amgraphqlartist.viewmodel.data.VenueToDeleteViewModel
 import com.amarchaud.ampoi.R
 import com.amarchaud.ampoi.adapter.SearchResultsAdapter
 import com.amarchaud.ampoi.databinding.FragmentBookmarksBinding
 import com.amarchaud.ampoi.interfaces.ILocationClickListener
-import com.amarchaud.ampoi.model.database.AppDao
-import com.amarchaud.ampoi.model.entity.VenueEntity
+import com.amarchaud.ampoi.model.app.VenueApp
 import com.amarchaud.ampoi.viewmodel.BookmarksViewModel
+import com.amarchaud.ampoi.viewmodel.data.VenueToDeleteViewModel
 import com.google.android.gms.maps.model.LatLng
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class BookmarksFragment : Fragment(), ILocationClickListener {
@@ -37,21 +35,16 @@ class BookmarksFragment : Fragment(), ILocationClickListener {
 
     private val viewModel: BookmarksViewModel by viewModels()
 
-    @Inject
-    lateinit var myDao: AppDao
-
     // recycler view
     private var venuesRecyclerAdapter = SearchResultsAdapter(this)
 
     // special viewModel
-    private val venueToDeleteViewModel: VenueToDeleteViewModel by activityViewModels()
+    private val venueToDelete: VenueToDeleteViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-
-        venuesRecyclerAdapter.myDao = myDao
 
         _binding = FragmentBookmarksBinding.inflate(inflater)
         return binding.root
@@ -71,7 +64,7 @@ class BookmarksFragment : Fragment(), ILocationClickListener {
                 venuesRecyclerAdapter.setLocationResults(it)
             })
 
-            venueToDeleteViewModel.venueToDeleteLiveData.observe(viewLifecycleOwner, {
+            venueToDelete.venueToDelete.observe(viewLifecycleOwner, {
                 if (it != null) {
                     viewModel.refresh()
                 }
@@ -84,7 +77,7 @@ class BookmarksFragment : Fragment(), ILocationClickListener {
         _binding = null
     }
 
-    override fun onLocationClicked(venueEntity: VenueEntity) {
+    override fun onLocationClicked(venueApp: VenueApp) {
 
         val sharedPref = requireContext().getSharedPreferences(
             getString(R.string.shared_pref),
@@ -94,7 +87,7 @@ class BookmarksFragment : Fragment(), ILocationClickListener {
 
         findNavController().navigate(
             BookmarksFragmentDirections.actionBookmarksFragmentToDetailsFragment(
-                venueEntity = venueEntity,
+                venueApp = venueApp,
                 LatLon = LatLng(
                     Double.Companion.fromBits(
                         sharedPref.getLong(
@@ -113,35 +106,28 @@ class BookmarksFragment : Fragment(), ILocationClickListener {
         )
     }
 
-    override fun onFavoriteClicked(venueEntity: VenueEntity) {
+    override fun onFavoriteClicked(venueApp: VenueApp) {
+
         AlertDialog.Builder(requireContext())
             .setTitle(R.string.DeleteEntryTitle)
             .setMessage(R.string.DeleteEntryMessage)
             .setPositiveButton(android.R.string.ok) { dialog, which ->
                 lifecycleScope.launch {
-                    val pos = myDao.getAllFavorites().indexOfFirst {
-                        it.id == venueEntity.id
-                    }
-                    if (pos >= 0) {
-                        myDao.removeFavoriteById(venueEntity.id)
-                        venuesRecyclerAdapter.setArtistWithoutRefresh(myDao.getAllFavorites())
-
-                        requireActivity().runOnUiThread {
-                            venuesRecyclerAdapter.notifyItemRemoved(pos)
-                        }
-                    }
+                    viewModel.deleteFavorite(venueApp)
                 }
             }
             .setNegativeButton(android.R.string.cancel) { dialog, which ->
                 lifecycleScope.launch {
+                    viewModel.refresh()
+                    /*
                     val pos = myDao.getAllFavorites().indexOfFirst {
-                        it.id == venueEntity.id
+                        it.id == venueApp.id
                     }
                     if (pos >= 0) {
                         requireActivity().runOnUiThread {
                             venuesRecyclerAdapter.notifyItemChanged(pos)
                         }
-                    }
+                    }*/
                 }
             }
             .setIcon(android.R.drawable.ic_dialog_alert)

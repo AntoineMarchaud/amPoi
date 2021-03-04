@@ -233,7 +233,6 @@ class MainFragment : Fragment(), ILocationClickListener {
             .withPermission(Manifest.permission.ACCESS_FINE_LOCATION)
             .withListener(object : PermissionListener {
 
-                @SuppressLint("MissingPermission")
                 override fun onPermissionGranted(p0: PermissionGrantedResponse?) {
                     viewModel.startLocation()
                 }

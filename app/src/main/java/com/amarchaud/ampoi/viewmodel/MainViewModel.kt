@@ -1,6 +1,7 @@
 package com.amarchaud.ampoi.viewmodel
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
 import android.content.pm.PackageManager
@@ -153,19 +154,8 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    @SuppressLint("MissingPermission")
     fun startLocation() {
-
-        if (ActivityCompat.checkSelfPermission(
-                app,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                app,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            _locationResultsError.postValue(ERROR_PERMISSION)
-            return
-        }
 
         locationProviderClient.requestLocationUpdates(
             mLocationRequest,

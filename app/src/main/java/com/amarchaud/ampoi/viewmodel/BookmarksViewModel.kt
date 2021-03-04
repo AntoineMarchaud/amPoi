@@ -29,11 +29,11 @@ class BookmarksViewModel @Inject constructor(
 
 
     fun refresh() {
-        _loadingLiveData.postValue(true)
         viewModelScope.launch {
+            _loadingLiveData.postValue(true)
             _poiBookmarkedLiveData.postValue(myDao.getAllFavorites().map { VenueApp(it) })
+            _loadingLiveData.postValue(false)
         }
-        _loadingLiveData.postValue(false)
     }
 
     fun deleteFavorite(venueApp: VenueApp) {

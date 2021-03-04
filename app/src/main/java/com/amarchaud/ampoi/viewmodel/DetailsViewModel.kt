@@ -40,43 +40,43 @@ class DetailsViewModel @Inject constructor(
     lateinit var venueApp: VenueApp
     //
 
-    var _venueName = MutableLiveData<String>()
+    private var _venueName = MutableLiveData<String>()
     val venueName: LiveData<String>
         get() = _venueName
 
-    var _venueRating = MutableLiveData<String>()
+    private var _venueRating = MutableLiveData<String>()
     val venueRating: MutableLiveData<String>
         get() = _venueRating
 
-    var _venueBar = MutableLiveData<Float>()
+    private var _venueBar = MutableLiveData<Float>()
     val venueBar: MutableLiveData<Float>
         get() = _venueBar
 
-    var _venueReviews = MutableLiveData<Int>()
+    private var _venueReviews = MutableLiveData<Int>()
     val venueReviews: MutableLiveData<Int>
         get() = _venueReviews
 
-    var _venueHours = MutableLiveData<String>()
+    private var _venueHours = MutableLiveData<String>()
     val venueHours: MutableLiveData<String>
         get() = _venueHours
 
-    var _venueAddress = MutableLiveData<String>()
+    private var _venueAddress = MutableLiveData<String>()
     val venueAddress: MutableLiveData<String>
         get() = _venueAddress
 
-    var _venueCategory = MutableLiveData<String>()
+    private var _venueCategory = MutableLiveData<String>()
     val venueCategory: MutableLiveData<String>
         get() = _venueCategory
 
-    var _venueWebsite = MutableLiveData<String>()
+    private var _venueWebsite = MutableLiveData<String>()
     val venueWebsite: MutableLiveData<String>
         get() = _venueWebsite
 
-    var _venuePhone = MutableLiveData<String>()
+    private var _venuePhone = MutableLiveData<String>()
     val venuePhone: MutableLiveData<String>
         get() = _venuePhone
 
-    var _error = MutableLiveData<String>()
+    private var _error = MutableLiveData<String>()
     val error: MutableLiveData<String>
         get() = _error
 
@@ -103,16 +103,16 @@ class DetailsViewModel @Inject constructor(
                 _details.postValue(venue)
 
                 //post to live datas bound fields
-                _venueName.value = venue.name
-                _venueRating.value = formatRatings(venue)
-                _venueBar.value = ratingBar(venue)
+                _venueName.postValue(venue.name)
+                _venueRating.postValue(formatRatings(venue))
+                _venueBar.postValue(ratingBar(venue))
                 //venueBarColor.postValue(ratingBarColor(venue.ratingColor))
-                _venueReviews.value = venue.ratingSignals
-                _venueHours.value = venue.hours?.status ?: ""
-                _venueAddress.value = address(venue)
-                _venueCategory.value = category(venue)
-                _venueWebsite.value = website(venue)
-                _venuePhone.value = phone(venue)
+                _venueReviews.postValue(venue.ratingSignals)
+                _venueHours.postValue(venue.hours?.status ?: "")
+                _venueAddress.postValue(address(venue))
+                _venueCategory.postValue(category(venue))
+                _venueWebsite.postValue(website(venue))
+                _venuePhone.postValue(phone(venue))
             } ?: error.postValue("Invalid data for location details")
 
 

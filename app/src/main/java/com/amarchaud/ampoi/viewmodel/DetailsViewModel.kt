@@ -45,39 +45,39 @@ class DetailsViewModel @Inject constructor(
         get() = _venueName
 
     private var _venueRating = MutableLiveData<String>()
-    val venueRating: MutableLiveData<String>
+    val venueRating: LiveData<String>
         get() = _venueRating
 
     private var _venueBar = MutableLiveData<Float>()
-    val venueBar: MutableLiveData<Float>
+    val venueBar: LiveData<Float>
         get() = _venueBar
 
     private var _venueReviews = MutableLiveData<Int>()
-    val venueReviews: MutableLiveData<Int>
+    val venueReviews: LiveData<Int>
         get() = _venueReviews
 
     private var _venueHours = MutableLiveData<String>()
-    val venueHours: MutableLiveData<String>
+    val venueHours: LiveData<String>
         get() = _venueHours
 
     private var _venueAddress = MutableLiveData<String>()
-    val venueAddress: MutableLiveData<String>
+    val venueAddress: LiveData<String>
         get() = _venueAddress
 
     private var _venueCategory = MutableLiveData<String>()
-    val venueCategory: MutableLiveData<String>
+    val venueCategory: LiveData<String>
         get() = _venueCategory
 
     private var _venueWebsite = MutableLiveData<String>()
-    val venueWebsite: MutableLiveData<String>
+    val venueWebsite: LiveData<String>
         get() = _venueWebsite
 
     private var _venuePhone = MutableLiveData<String>()
-    val venuePhone: MutableLiveData<String>
+    val venuePhone: LiveData<String>
         get() = _venuePhone
 
     private var _error = MutableLiveData<String>()
-    val error: MutableLiveData<String>
+    val error: LiveData<String>
         get() = _error
 
 
@@ -94,7 +94,7 @@ class DetailsViewModel @Inject constructor(
                 myApi.getDetails(venueApp.id!!)
             } catch (e: Exception) {
                 Log.d(TAG, "error when calling getDetails : $e")
-                error.postValue(e.message)
+                _error.postValue(e.message)
                 null
             }
 
@@ -113,7 +113,7 @@ class DetailsViewModel @Inject constructor(
                 _venueCategory.postValue(category(venue))
                 _venueWebsite.postValue(website(venue))
                 _venuePhone.postValue(phone(venue))
-            } ?: error.postValue("Invalid data for location details")
+            } ?: _error.postValue("Invalid data for location details")
 
 
         }

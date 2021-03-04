@@ -103,11 +103,10 @@ class MainViewModel @Inject constructor(
                 Log.e(TAG, "Error getSearch : ${e.printStackTrace()}")
                 null
             }
-            if (response?.response == null || response.response?.venues == null) {
-                _locationResultsError.postValue(ERROR_CODE_RETRIEVE)
-            } else {
+
+            response?.response?.venues?.let {
                 _venueModelsLiveData.postValue(buildResults(response.response?.venues!!))
-            }
+            } ?: _locationResultsError.postValue(ERROR_CODE_RETRIEVE)
         }
     }
 

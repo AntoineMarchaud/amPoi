@@ -13,13 +13,11 @@ import androidx.core.graphics.drawable.DrawableCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import com.amarchaud.ampoi.R
 import com.amarchaud.ampoi.databinding.FragmentDetailsBinding
 import com.amarchaud.ampoi.extensions.addMarker
 import com.amarchaud.ampoi.extensions.initMapView
-import com.amarchaud.ampoi.model.database.AppDao
 import com.amarchaud.ampoi.model.network.details.VenueDetail
 import com.amarchaud.ampoi.utils.Errors
 import com.amarchaud.ampoi.viewmodel.DetailsViewModel
@@ -32,11 +30,9 @@ import com.karumi.dexter.listener.PermissionGrantedResponse
 import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.single.PermissionListener
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
 import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.overlay.Marker
-import javax.inject.Inject
 
 
 @AndroidEntryPoint
@@ -202,7 +198,9 @@ class DetailsFragment : Fragment() {
                                     Snackbar.LENGTH_SHORT
                                 ).show()
                             }
+
                         } else {
+
                             view?.let {
                                 Snackbar.make(
                                     it,
@@ -289,15 +287,11 @@ class DetailsFragment : Fragment() {
         super.onDestroy()
         _binding = null
 
+
         if (viewModel.venueApp.isFavorite) {
-            venueToDeleteViewModel.venueToDelete.postValue(
-                null
-            )
+            venueToDeleteViewModel.setVenueToDelete(null)
         } else {
-            venueToDeleteViewModel.venueToDelete.postValue(
-                VenueToDeleteViewModel.VenueModified(viewModel.venueApp)
-            )
+            venueToDeleteViewModel.setVenueToDelete(viewModel.venueApp)
         }
     }
-
 }

@@ -72,6 +72,7 @@ class BookmarksFragment : Fragment(), ILocationClickListener {
         }
     }
 
+
     override fun onDestroy() {
         super.onDestroy()
         _binding = null
@@ -119,20 +120,9 @@ class BookmarksFragment : Fragment(), ILocationClickListener {
             .setNegativeButton(android.R.string.cancel) { dialog, which ->
                 lifecycleScope.launch {
                     viewModel.refresh()
-                    /*
-                    val pos = myDao.getAllFavorites().indexOfFirst {
-                        it.id == venueApp.id
-                    }
-                    if (pos >= 0) {
-                        requireActivity().runOnUiThread {
-                            venuesRecyclerAdapter.notifyItemChanged(pos)
-                        }
-                    }*/
                 }
             }
             .setIcon(android.R.drawable.ic_dialog_alert)
             .show()
     }
-
-
 }

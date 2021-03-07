@@ -10,8 +10,10 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
 import com.amarchaud.ampoi.R
@@ -201,6 +203,7 @@ class DetailsFragment : Fragment() {
                         } else {
 
                             venueToDeleteViewModel.setVenueToDelete(viewModel.venueApp)
+                            setFragmentResult("venueToDelete", bundleOf("venue" to viewModel.venueApp))
 
                             detailsIsFavorite.setImageDrawable(
                                 ContextCompat.getDrawable(

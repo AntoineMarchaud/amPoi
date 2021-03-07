@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -41,6 +42,15 @@ class BookmarksFragment : Fragment(), ILocationClickListener {
     // special viewModel
     private val venueToDelete: VenueToDeleteViewModel by activityViewModels()
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        setFragmentResultListener("venueToDelete") { _, bundle ->
+            val result : VenueApp? = bundle.getParcelable("venue")
+            result?.let { venuesRecyclerAdapter.removeVenue(it) }
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -71,7 +81,7 @@ class BookmarksFragment : Fragment(), ILocationClickListener {
                     //viewModel.refresh()
 
                     // second method : just remove
-                    venuesRecyclerAdapter.removeVenue(it)
+                    //venuesRecyclerAdapter.removeVenue(it)
                 }
             })
         }

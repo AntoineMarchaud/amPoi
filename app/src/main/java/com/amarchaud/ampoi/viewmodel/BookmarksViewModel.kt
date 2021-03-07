@@ -19,8 +19,8 @@ class BookmarksViewModel @Inject constructor(
     val loadingLiveData: LiveData<Boolean>
         get() = _loadingLiveData
 
-    private var _poiBookmarkedLiveData= MutableLiveData<List<VenueApp>>()
-    val poiBookmarkedLiveData: LiveData<List<VenueApp>>
+    private var _poiBookmarkedLiveData= MutableLiveData<MutableList<VenueApp>>()
+    val poiBookmarkedLiveData: LiveData<MutableList<VenueApp>>
         get() = _poiBookmarkedLiveData
 
     init {
@@ -31,7 +31,7 @@ class BookmarksViewModel @Inject constructor(
     fun refresh() {
         viewModelScope.launch {
             _loadingLiveData.postValue(true)
-            _poiBookmarkedLiveData.postValue(myDao.getAllFavorites().map { VenueApp(it) })
+            _poiBookmarkedLiveData.postValue(myDao.getAllFavorites().map { VenueApp(it) }.toMutableList())
             _loadingLiveData.postValue(false)
         }
     }
@@ -52,5 +52,8 @@ class BookmarksViewModel @Inject constructor(
         }
     }
 
-
+    /*
+    fun removeVenue(venueToRemove: VenueApp) {
+        _poiBookmarkedLiveData.value?.remove(venueToRemove)
+    }*/
 }

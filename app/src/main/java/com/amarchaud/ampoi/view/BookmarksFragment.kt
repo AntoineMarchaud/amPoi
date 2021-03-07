@@ -66,7 +66,13 @@ class BookmarksFragment : Fragment(), ILocationClickListener {
 
             venueToDelete.venueToDelete.observe(viewLifecycleOwner, {
                 if (it != null) {
-                    viewModel.refresh()
+
+                    // first method : refresh all
+                    //viewModel.refresh()
+
+                    // second method : just remove
+                    venuesRecyclerAdapter.removeVenue(it)
+                    println(viewModel.poiBookmarkedLiveData.value)
                 }
             })
         }

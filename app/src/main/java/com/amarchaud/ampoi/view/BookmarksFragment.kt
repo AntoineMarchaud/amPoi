@@ -72,7 +72,6 @@ class BookmarksFragment : Fragment(), ILocationClickListener {
 
                     // second method : just remove
                     venuesRecyclerAdapter.removeVenue(it)
-                    println(viewModel.poiBookmarkedLiveData.value)
                 }
             })
         }

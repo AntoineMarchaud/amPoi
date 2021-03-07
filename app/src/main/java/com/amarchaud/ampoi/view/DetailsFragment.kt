@@ -20,7 +20,6 @@ import com.amarchaud.ampoi.extensions.initMapView
 import com.amarchaud.ampoi.model.network.details.VenueDetail
 import com.amarchaud.ampoi.utils.Errors
 import com.amarchaud.ampoi.viewmodel.DetailsViewModel
-import com.amarchaud.ampoi.viewmodel.data.VenueToDeleteViewModel
 import com.google.android.material.snackbar.Snackbar
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.PermissionToken
@@ -50,10 +49,6 @@ class DetailsFragment : Fragment() {
     private val viewModel: DetailsViewModel by viewModels()
 
     private var snackBar: Snackbar? = null
-
-
-    // special viewModel
-    private val venueToDeleteViewModel: VenueToDeleteViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -192,8 +187,6 @@ class DetailsFragment : Fragment() {
                                 )
                             )
 
-                            venueToDeleteViewModel.setVenueToDelete(null)
-
                             clearFragmentResult(TAG)
 
                             view?.let {
@@ -206,7 +199,6 @@ class DetailsFragment : Fragment() {
 
                         } else {
 
-                            venueToDeleteViewModel.setVenueToDelete(viewModel.venueApp)
                             setFragmentResult(TAG, bundleOf(VENUE_TO_DELETE to viewModel.venueApp))
 
                             detailsIsFavorite.setImageDrawable(

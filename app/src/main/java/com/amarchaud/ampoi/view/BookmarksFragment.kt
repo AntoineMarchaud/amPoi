@@ -19,7 +19,6 @@ import com.amarchaud.ampoi.databinding.FragmentBookmarksBinding
 import com.amarchaud.ampoi.interfaces.ILocationClickListener
 import com.amarchaud.ampoi.model.app.VenueApp
 import com.amarchaud.ampoi.viewmodel.BookmarksViewModel
-import com.amarchaud.ampoi.viewmodel.data.VenueToDeleteViewModel
 import com.google.android.gms.maps.model.LatLng
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -38,9 +37,6 @@ class BookmarksFragment : Fragment(), ILocationClickListener {
 
     // recycler view
     private var venuesRecyclerAdapter = SearchResultsAdapter(this)
-
-    // special viewModel
-    private val venueToDelete: VenueToDeleteViewModel by activityViewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,17 +68,6 @@ class BookmarksFragment : Fragment(), ILocationClickListener {
 
             viewModel.poiBookmarkedLiveData.observe(viewLifecycleOwner, {
                 venuesRecyclerAdapter.setLocationResults(it)
-            })
-
-            venueToDelete.venueToDelete.observe(viewLifecycleOwner, {
-                if (it != null) {
-
-                    // first method : refresh all
-                    //viewModel.refresh()
-
-                    // second method : just remove
-                    //venuesRecyclerAdapter.removeVenue(it)
-                }
             })
         }
     }

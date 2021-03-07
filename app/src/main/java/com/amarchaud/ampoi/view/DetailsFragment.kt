@@ -175,22 +175,21 @@ class DetailsFragment : Fragment() {
         with(binding) {
 
             detailsIsFavorite.setOnClickListener {
-                venueDetail.id?.let { locationId ->
-                    context?.let { context ->
+                venueDetail.id?.let {
+                    context?.let {
 
                         viewModel.onBookMarkedClick()
 
-                        detailsIsFavorite.setImageDrawable(
-                            ContextCompat.getDrawable(
-                                requireContext(),
-                                if (viewModel.venueApp.isFavorite)
-                                    R.drawable.star_circle
-                                else
-                                    R.drawable.star_circle_disabled
-                            )
-                        )
-
                         if (viewModel.venueApp.isFavorite) {
+
+                            detailsIsFavorite.setImageDrawable(
+                                ContextCompat.getDrawable(
+                                    requireContext(), R.drawable.star_circle
+                                )
+                            )
+
+                            venueToDeleteViewModel.setVenueToDelete(null)
+
                             view?.let {
                                 Snackbar.make(
                                     it,
@@ -200,6 +199,15 @@ class DetailsFragment : Fragment() {
                             }
 
                         } else {
+
+                            venueToDeleteViewModel.setVenueToDelete(viewModel.venueApp)
+
+                            detailsIsFavorite.setImageDrawable(
+                                ContextCompat.getDrawable(
+                                    requireContext(),
+                                    R.drawable.star_circle_disabled
+                                )
+                            )
 
                             view?.let {
                                 Snackbar.make(
@@ -286,12 +294,5 @@ class DetailsFragment : Fragment() {
     override fun onDestroy() {
         super.onDestroy()
         _binding = null
-
-
-        if (viewModel.venueApp.isFavorite) {
-            venueToDeleteViewModel.setVenueToDelete(null)
-        } else {
-            venueToDeleteViewModel.setVenueToDelete(viewModel.venueApp)
-        }
     }
 }

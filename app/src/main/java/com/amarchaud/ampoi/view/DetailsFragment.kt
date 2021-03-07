@@ -37,6 +37,11 @@ import org.osmdroid.views.overlay.Marker
 @AndroidEntryPoint
 class DetailsFragment : Fragment() {
 
+    companion object {
+        const val TAG = "DetailsFragment"
+        const val VENUE_TO_DELETE = "venueToDelete"
+    }
+
     private var _binding: FragmentDetailsBinding? = null
     private val binding get() = _binding!!
 
@@ -189,7 +194,7 @@ class DetailsFragment : Fragment() {
 
                             venueToDeleteViewModel.setVenueToDelete(null)
 
-                            clearFragmentResult("venueToDelete")
+                            clearFragmentResult(TAG)
 
                             view?.let {
                                 Snackbar.make(
@@ -202,7 +207,7 @@ class DetailsFragment : Fragment() {
                         } else {
 
                             venueToDeleteViewModel.setVenueToDelete(viewModel.venueApp)
-                            setFragmentResult("venueToDelete", bundleOf("venue" to viewModel.venueApp))
+                            setFragmentResult(TAG, bundleOf(VENUE_TO_DELETE to viewModel.venueApp))
 
                             detailsIsFavorite.setImageDrawable(
                                 ContextCompat.getDrawable(

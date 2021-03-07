@@ -45,8 +45,8 @@ class BookmarksFragment : Fragment(), ILocationClickListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setFragmentResultListener("venueToDelete") { _, bundle ->
-            val result : VenueApp? = bundle.getParcelable("venue")
+        setFragmentResultListener(DetailsFragment.TAG) { _, bundle ->
+            val result : VenueApp? = bundle.getParcelable(DetailsFragment.VENUE_TO_DELETE)
             result?.let { venuesRecyclerAdapter.removeVenue(it) }
         }
     }

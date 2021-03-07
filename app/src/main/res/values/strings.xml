@@ -55,4 +55,7 @@
     <string name="shared_pref">shared_pref</string>
     <string name="saved_location_lat">saved_location_lat</string>
     <string name="saved_location_lon">saved_location_lon</string>
+
+    <string name="exitAppTitle">Exit app</string>
+    <string name="exitAppBody">Do you want to quit app ?</string>
 </resources>

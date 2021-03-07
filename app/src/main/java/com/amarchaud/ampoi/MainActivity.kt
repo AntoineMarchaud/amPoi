@@ -1,15 +1,16 @@
 package com.amarchaud.ampoi
 
+
+import android.app.AlertDialog
 import android.os.Bundle
-import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import androidx.navigation.NavArgument
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupWithNavController
 import com.amarchaud.ampoi.databinding.ActivityMainBinding
 import dagger.hilt.android.AndroidEntryPoint
+
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -65,5 +66,19 @@ class MainActivity : AppCompatActivity() {
             // bottom nav
             bottomNav.setupWithNavController(navController)
         }
+    }
+
+    override fun onBackPressed() {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.exitAppTitle)
+            .setMessage(R.string.exitAppBody)
+            .setPositiveButton(android.R.string.ok)  { dialog, which ->
+                finish()
+            }
+            .setNegativeButton(android.R.string.cancel) { dialog, which ->
+                dialog.dismiss()
+            }
+            .setIcon(android.R.drawable.ic_dialog_alert)
+            .show()
     }
 }

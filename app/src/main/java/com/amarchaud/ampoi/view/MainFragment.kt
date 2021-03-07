@@ -75,6 +75,8 @@ class MainFragment : Fragment(), ILocationClickListener {
                         if (!it.isIconified) {
                             it.onActionViewCollapsed()
                             return
+                        } else {
+                            requireActivity().finish()
                         }
                     }
                 }

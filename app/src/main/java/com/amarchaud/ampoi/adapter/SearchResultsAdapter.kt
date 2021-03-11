@@ -15,7 +15,7 @@ import kotlin.math.roundToInt
 class SearchResultsAdapter(private val onClickListener: ILocationClickListener) :
     RecyclerView.Adapter<SearchResultsAdapter.ItemLocationResultViewHolder>() {
 
-    private var venueModels: MutableList<VenueApp> = mutableListOf()
+    private var venueModels: List<VenueApp> = listOf()
 
     override fun onCreateViewHolder(
         parent: ViewGroup,
@@ -95,6 +95,7 @@ class SearchResultsAdapter(private val onClickListener: ILocationClickListener) 
     inner class ItemLocationResultViewHolder(var binding: ItemLocationResultBinding) :
         RecyclerView.ViewHolder(binding.root)
 
+    /*
     fun removeVenue(venueAppToRemove: VenueApp) {
         venueModels.indexOfFirst {
             it.id == venueAppToRemove.id
@@ -104,13 +105,13 @@ class SearchResultsAdapter(private val onClickListener: ILocationClickListener) 
                 notifyItemRemoved(pos)
             }
         }
-    }
+    }*/
 
     /**
      * Callable from outside (View)
      * Automatically detect if view must be refreshed
      */
-    fun setLocationResults(locations: MutableList<VenueApp>) {
+    fun setLocationResults(locations: List<VenueApp>) {
         if (locations.isNullOrEmpty()) {
             venueModels = locations
             notifyDataSetChanged()

@@ -1,6 +1,6 @@
 # amPoi
 
-A app to test Foursquare Api and display POI around my position
+An app to test Foursquare Api and display POI around my position
 
 - Kotlin with Coroutines
 - MVVM (Databinding/ViewBinding/LiveData)

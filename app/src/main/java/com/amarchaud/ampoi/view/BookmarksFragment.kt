@@ -41,9 +41,9 @@ class BookmarksFragment : Fragment(), ILocationClickListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setFragmentResultListener(DetailsFragment.TAG) { _, _ ->
-            // use diffutil to refresh list
-            viewModel.refresh()
+        setFragmentResultListener(DetailsFragment.TAG) { _, bundle ->
+            val result: VenueApp? = bundle.getParcelable(DetailsFragment.TAG)
+            result?.let { viewModel.refresh() }
         }
     }
 

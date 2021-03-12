@@ -42,7 +42,7 @@ class BookmarksFragment : Fragment(), ILocationClickListener {
         super.onCreate(savedInstanceState)
 
         setFragmentResultListener(DetailsFragment.TAG) { _, bundle ->
-            val result: VenueApp? = bundle.getParcelable(DetailsFragment.TAG)
+            val result: VenueApp? = bundle.getParcelable(DetailsFragment.VENUE_TO_DELETE)
             result?.let { viewModel.refresh() }
         }
     }

@@ -27,13 +27,18 @@ class SearchResultsAdapter(private val onClickListener: ILocationClickListener) 
     }
 
     override fun onBindViewHolder(holder: ItemLocationResultViewHolder, position: Int) {
-
-        val context = holder.itemView.context
         val venueApp = venueModels[position]
+        holder.bind(venueApp)
+    }
 
-        // binding
-        with(holder.binding) {
+    override fun getItemCount(): Int {
+        return venueModels.size
+    }
 
+    inner class ItemLocationResultViewHolder(var binding: ItemLocationResultBinding) :
+        RecyclerView.ViewHolder(binding.root) {
+
+        fun bind(venueApp: VenueApp) = with(binding) {
             //name and category display
             locationName.text = venueApp.locationName ?: ""
             locationCategory.text = venueApp.locationCategory ?: ""
@@ -46,13 +51,13 @@ class SearchResultsAdapter(private val onClickListener: ILocationClickListener) 
 
                     val km = meters / 1000.0
 
-                    locationDistance.text = context.resources.getQuantityString(
+                    locationDistance.text = itemView.context.resources.getQuantityString(
                         R.plurals.km, km.roundToInt(),
                         String.format("%.1f", km)
                     )
                 } else {
                     locationDistance.text =
-                        context.resources.getQuantityString(
+                        itemView.context.resources.getQuantityString(
                             R.plurals.meters,
                             meters,
                             meters.toString()
@@ -60,15 +65,11 @@ class SearchResultsAdapter(private val onClickListener: ILocationClickListener) 
                 }
             }
 
-
-
-
-
             if (venueApp.locationIcon.isNullOrEmpty()) {
                 locationImage.setImageResource(R.drawable.unknown)
             } else {
                 try {
-                    Glide.with(context)
+                    Glide.with(itemView.context)
                         .load(venueApp.locationIcon) // use placeholder
                         .error(R.drawable.unknown)
                         .into(locationImage)
@@ -78,34 +79,15 @@ class SearchResultsAdapter(private val onClickListener: ILocationClickListener) 
             }
 
             //set the initial state of the favorites icon by checking if its a favorite in the database
-            setupFavoriteIndicator(holder.binding, venueApp, onClickListener)
+            setupFavoriteIndicator(this, venueApp, onClickListener)
 
             // callback to the entire view
-            holder.itemView.setOnClickListener {
+            itemView.setOnClickListener {
                 onClickListener.onLocationClicked(venueApp)
             }
         }
+
     }
-
-
-    override fun getItemCount(): Int {
-        return venueModels.size
-    }
-
-    inner class ItemLocationResultViewHolder(var binding: ItemLocationResultBinding) :
-        RecyclerView.ViewHolder(binding.root)
-
-    /*
-    fun removeVenue(venueAppToRemove: VenueApp) {
-        venueModels.indexOfFirst {
-            it.id == venueAppToRemove.id
-        }.let { pos ->
-            if (pos >= 0) {
-                venueModels.removeAt(pos)
-                notifyItemRemoved(pos)
-            }
-        }
-    }*/
 
     /**
      * Callable from outside (View)
